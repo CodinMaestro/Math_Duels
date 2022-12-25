@@ -33,7 +33,7 @@ settings_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((500, 4
                                              text='Настройки',
                                              manager=manager)
 
-#text_input = UITextEntryLine(relative_rect=Rect(0, 0, 100, 100), manager=manager)
+# text_input = UITextEntryLine(relative_rect=Rect(0, 0, 100, 100), manager=manager)
 
 
 def load_img(name, colorkey=None):
@@ -73,6 +73,31 @@ class AnimatedSprite(pygame.sprite.Sprite):
     def update(self):
         self.cur_frame = (self.cur_frame + 1) % len(self.frames)
         self.image = self.frames[self.cur_frame]
+
+
+class Training:
+    def __init__(self):
+        pass
+
+
+class Story:
+    def __init__(self):
+        pass
+
+
+class TwoPlayers:
+    def __init__(self):
+        pass
+
+
+class Lobby:
+    def __init__(self):
+        pass
+
+
+class Settings:
+    def __init__(self):
+        pass
 
 
 is_running = True
