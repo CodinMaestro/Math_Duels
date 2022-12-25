@@ -19,12 +19,7 @@ class Math_question:
                     return False
         symbols = self.question.split()
         for si in range(len(symbols)):
-            if symbols[si] in '+-/*' or si == '**':
-                if symbols[si] not in self.operations:
-                    self.operations[symbols[si]] = 1
-                else:
-                    self.operations[symbols[si]] = self.operations[symbols[si]] + 1
-            elif symbols[si].isdigit():
+            if symbols[si].isdigit():
                 if symbols[si] not in self.numbers:
                     self.numbers[symbols[int(si)]] = 1
                 else:
@@ -91,8 +86,8 @@ class Math_question:
         summ += self.operations['-'] * 2
         summ += self.operations['*'] * 3
         summ += self.operations['/'] * 4
-        summ += self.operations['V‾'] * 5
-        summ += self.operations['**'] * 6
+        summ += self.operations['V‾'] * 6
+        summ += self.operations['**'] * 5
         summ += self.operations['!'] * 4
         return summ
 
