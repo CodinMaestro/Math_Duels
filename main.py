@@ -57,13 +57,11 @@ class Math_question:
                 elif s[i] == '!':
                     self.sym.append(s[i])
                     self.question = self.question[:-1] + s[i]
-                    if s[i] in self.operations:
-                        self.operations[s[i]] += 1
+                    self.operations[s[i]] += 1
                 elif s[i] == 'V' and s[i + 1] == '‾':
                     self.sym.append('V‾')
                     self.question += ' V‾'
-                    if s[i] in self.operations:
-                        self.operations['V‾'] += 1
+                    self.operations['V‾'] += 1
                 elif s[i] in '()':
                     if s[i] == '(':
                         n += 1
