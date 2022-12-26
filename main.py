@@ -100,13 +100,56 @@ class Settings:
         pass
 
 
+def start():
+    fps = 60
+    screen.fill("black")
+    font_renderer = pygame.font.Font(None, 90)
+    manager1 = pygame_gui.UIManager((1200, 750))
+
+    label_vol = font_renderer.render("Звук", True, "white")
+    label_rect_vol = label_vol.get_rect()
+    label_rect_vol = label_rect_vol.move((200, 187))
+
+    screen.blit(label_vol, label_rect_vol)
+
+    label_cur = font_renderer.render("Курсор", True, "white")
+    label_rect_cur = label_cur.get_rect()
+    label_rect_cur = label_rect_cur.move((200, 374))
+
+    screen.blit(label_cur, label_rect_cur)
+
+    slider = pygame_gui.elements.ui_horizontal_slider.UIHorizontalSlider(relative_rect=pygame.Rect((480, 208), (600, 30)),
+                                                                manager=manager1, start_value=0, value_range=(0, 100))
+
+    arr = ["Такой курсор", "Вот такой курсор", "И этот"]
+    drop_menu = pygame_gui.elements.ui_drop_down_menu.UIDropDownMenu(options_list=arr, starting_option=arr[0],
+                                                                     relative_rect=pygame.Rect((480, 400), (200, 60)),
+                                                                     manager=manager1, )
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                pass
+            if event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
+                if event.ui_element == drop_menu:
+                    return
+
+            manager1.process_events(event)
+        pygame.display.flip()
+        manager1.draw_ui(screen)
+        manager1.update(fps)
+        clock.tick(fps)
+
+
 is_running = True
 all_sprites = pygame.sprite.Group()
 logo = pygame.transform.scale(load_img("logo.png"), (8000, 400))
 dragon = AnimatedSprite(logo, 20, 1, 400, -50)
 clock = pygame.time.Clock()
 fps = 10
-
 while is_running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -123,6 +166,7 @@ while is_running:
                 print('ЛОББИ!')
             if event.ui_element == settings_button:
                 print('НАСТРОЙКИ!')
+                start()
 
         '''if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
             print(text_input.get_text())'''
