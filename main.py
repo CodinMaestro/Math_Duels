@@ -2,10 +2,13 @@ import math
 
 
 class Math_question:
-    def __init__(self, line):
+    def __init__(self, line, dict=None):
         self.problem = line
         self.question = ''
-        self.numbers = {}
+        if dict is None:
+            self.numbers = {}
+        else:
+            self.numbers = dict
         self.numbers['1'] = 1
         self.numbers['0'] = 1
         self.operations = {'**': 0, '*': 0, '+': 0, '-': 0, '/': 0, '!': 0, 'V‾': 0}
@@ -25,11 +28,11 @@ class Math_question:
                 else:
                     return False
             if '!' in symbols[si]:
-                symbols[si] = factorial(symbols[si][1:-2])
-            if 'V‾' in symbols[si]:
-                symbols[si] = root(symbols[si][3:-1])
+                symbols[si] = factorial(symbols[si][1:-2], self.numbers)
+            elif 'V‾' in symbols[si]:
+                symbols[si] = root(symbols[si][3:-1], self.numbers)
         if len(symbols) > 0:
-            if not symbols[0] is None:
+            if not None in symbols:
                 self.question = ''.join(symbols)
                 return True
 
@@ -90,15 +93,15 @@ class Math_question:
         return summ
 
 
-def root(question):
-    p = Math_question(question)
+def root(question, dict):
+    p = Math_question(question, dict)
     np = p.transformation()
     if p.checking_for_correctness():
         return str(math.sqrt(eval(np)))
 
 
-def factorial(question):
-    p = Math_question(question)
+def factorial(question, dict):
+    p = Math_question(question, dict)
     np = p.transformation()
     if p.checking_for_correctness():
         return str(math.factorial(eval(np)))
