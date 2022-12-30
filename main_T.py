@@ -164,7 +164,7 @@ def settings():
 
 is_running = True
 all_sprites = pygame.sprite.Group()
-logo = pygame.transform.scale(load_img("logo.png"), (8000, 400))
+logo = pygame.transform.scale(load_img("logo_2.png"), (8000, 400))
 logo_go = AnimatedSprite(logo, 20, 1, 400, -50)
 clock = pygame.time.Clock()
 fps = 10
