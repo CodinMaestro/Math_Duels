@@ -72,31 +72,189 @@ class AnimatedSprite(pygame.sprite.Sprite):
         self.image = self.frames[self.cur_frame]
 
 
-def training():
-    pass
+class Training():
+    def __init__(self):
+        super().__init__()
+        fps = 60
+        screen.fill("black")
+        self.manager_tr = pygame_gui.UIManager((1200, 750))
+        self.tm = 0
+
+        self.location = pygame.transform.scale(load_img("loc_for.png"), (1200, 500))
+        screen.blit(self.location, self.location.get_rect())
+
+        self.text_input = UITextEntryLine(relative_rect=Rect(0, 500, 1100, 250), manager=self.manager_tr,
+                                     placeholder_text="1 + 2 = 3")
+        self.text_input.disable()
+
+        self.but_sqrt = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 550), (100, 50)),
+                                                text='Корень',
+                                                manager=self.manager_tr)
+        self.but_sqrt.disable()
+
+        self.but_ready = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 500), (100, 50)),
+                                                 text='Готово',
+                                                 manager=self.manager_tr)
+        self.but_ready.disable()
+
+        self.but_opponent_ans = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 700), (100, 50)),
+                                                        text='Ответ',
+                                                        manager=self.manager_tr)
+
+        self.but_opponent_ans.disable()
+
+        rules = ["Ответ", "", "Противника"]
+        font = pygame.font.Font("data/F77.ttf", 13)
+        text_coord = 620
+        for line in rules:
+            self.rendered = font.render(line, True, "white")
+            self.linerect = self.rendered.get_rect()
+            text_coord += -5
+            self.linerect.top = text_coord
+            self.linerect.x = 1100
+            text_coord += self.linerect.height
+            screen.blit(self.rendered, self.linerect)
+
+        self.text_input2 = UITextEntryLine(relative_rect=Rect(1100, 650, 100, 50), manager=self.manager_tr)
+        self.text_input2.disable()
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
+                    self.tm += 1
+                    self.training_move()
+                self.manager_tr.process_events(event)
+
+            arrow = pygame.transform.scale(load_img("arrow.png"), (100, 100))
+            if self.tm == 2:
+                self.arrow1 = arrow.get_rect().move(1100, 460)
+                screen.blit(arrow, self.arrow1)
+            if self.tm == 3:
+                self.arrow1 = arrow.get_rect().move(1100, 410)
+                screen.blit(arrow, self.arrow1)
+            if self.tm == 4:
+                screen.blit(self.location, self.location.get_rect())
+                self.arrow1 = arrow.get_rect().move(1100, 550)
+                screen.blit(arrow, self.arrow1)
+            if self.tm == 5:
+                self.arrow1 = arrow.get_rect().move(1100, 610)
+                screen.blit(arrow, self.arrow1)
+            pygame.display.flip()
+            self.manager_tr.draw_ui(screen)
+            self.manager_tr.update(fps)
+            clock.tick(fps)
+
+    def training_move(self):
+        if self.tm == 1:
+            self.text_input.enable()
+        if self.tm == 2:
+            self.but_sqrt.enable()
+        if self.tm == 3:
+            self.but_ready.enable()
+        if self.tm == 4:
+            self.text_input2.enable()
+        if self.tm == 5:
+            self.but_opponent_ans.enable()
+        if self.tm == 6:
+            print("Congratulations!")
 
 
-def story():
-    pass
+class Story():
+    def __init__(self):
+        super().__init__()
+        fps = 60
+        screen.fill("black")
+        manager_st = pygame_gui.UIManager((1200, 750))
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
+                    self.chapters()
+
+                manager_st.process_events(event)
+            pygame.display.flip()
+            manager_st.draw_ui(screen)
+            manager_st.update(fps)
+            clock.tick(fps)
+
+    def chapters(self):
+        fps = 60
+        screen.fill("black")
+        manager_ch = pygame_gui.UIManager((1200, 750))
+
+        first_ch = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((0, 0), (400, 750)),
+                                                text='<mega_image>',
+                                                manager=manager_ch)
+        second_ch = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((400, 0), (400, 750)),
+                                                text='<mega_image_2>',
+                                                manager=manager_ch)
+
+        third_ch = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((800, 0), (400, 750)),
+                                                text='<mega_image_3>',
+                                                manager=manager_ch)
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == first_ch:
+                        # Уровни для 1-й главы
+                        pass
+                    if event.ui_element == second_ch:
+                        # Уровни для 2-й главы
+                        pass
+                    if event.ui_element == third_ch:
+                        # Уровни для 3-й главы
+                        pass
+                manager_ch.process_events(event)
+            pygame.display.flip()
+            manager_ch.draw_ui(screen)
+            manager_ch.update(fps)
+            clock.tick(fps)
 
 
 def two_players():
     fps = 60
     screen.fill("black")
     manager_tp = pygame_gui.UIManager((1200, 750))
-    text_input = UITextEntryLine(relative_rect=Rect(0, 500, 1100, 250), manager=manager_tp)
 
-    but_sqrt = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 600), (100, 100)),
+    location = pygame.transform.scale(load_img("loc_for.png"), (1200, 500))
+    screen.blit(location, location.get_rect())
+
+    text_input = UITextEntryLine(relative_rect=Rect(0, 500, 1100, 250), manager=manager_tp, placeholder_text="1 + 2 = 3")
+
+    but_sqrt = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 550), (100, 50)),
                                              text='Корень',
                                              manager=manager_tp)
 
-    but_ready = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 500), (100, 100)),
+    but_ready = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 500), (100, 50)),
                                             text='Готово',
                                             manager=manager_tp)
 
-    but_smth = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 700), (100, 50)),
+    but_opponent_ans = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 700), (100, 50)),
                                             text='Ответ',
                                             manager=manager_tp)
+    rules = ["Ответ", "", "Противника"]
+    font = pygame.font.Font("data/F77.ttf", 13)
+    text_coord = 620
+    for line in rules:
+        rendered = font.render(line, True, "white")
+        linerect = rendered.get_rect()
+        text_coord += -5
+        linerect.top = text_coord
+        linerect.x = 1100
+        text_coord += linerect.height
+        screen.blit(rendered, linerect)
+
+    text_input2 = UITextEntryLine(relative_rect=Rect(1100, 650, 100, 50), manager=manager_tp)
 
     while True:
         for event in pygame.event.get():
@@ -106,7 +264,7 @@ def two_players():
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 pass
                 # Можно вывести содержимое
-                #print(text_input.get_text())
+                # print(text_input.get_text())
 
             manager_tp.process_events(event)
         pygame.display.flip()
@@ -122,7 +280,7 @@ def lobby():
 def settings():
     fps = 60
     screen.fill("black")
-    font_renderer = pygame.font.Font(None, 90)
+    font_renderer = pygame.font.Font("data/F77.ttf", 40)
     manager_sett = pygame_gui.UIManager((1200, 750))
 
     label_vol = font_renderer.render("Звук", True, "white")
@@ -175,9 +333,9 @@ while is_running:
 
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == train_button:
-                pass
+                Training()
             if event.ui_element == story_button:
-                pass
+                Story()
             if event.ui_element == two_players_button:
                 pass
                 two_players()
