@@ -394,19 +394,7 @@ class Training():
                                                         manager=self.manager_tr)
 
         self.but_opponent_ans.disable()
-
-        rules = ["Ответ", "", "Противника"]
-        font = pygame.font.Font("data/F77.ttf", 13)
-        text_coord = 620
-        for line in rules:
-            self.rendered = font.render(line, True, "white")
-            self.linerect = self.rendered.get_rect()
-            text_coord += -5
-            self.linerect.top = text_coord
-            self.linerect.x = 1100
-            text_coord += self.linerect.height
-            screen.blit(self.rendered, self.linerect)
-
+        self.text()
         self.text_input2 = UITextEntryLine(relative_rect=Rect(1100, 650, 100, 50), manager=self.manager_tr)
         self.text_input2.disable()
 
@@ -419,7 +407,6 @@ class Training():
                     self.tm += 1
                     self.training_move()
                 self.manager_tr.process_events(event)
-
             arrow = pygame.transform.scale(load_img("arrow.png"), (100, 100))
             if self.tm == 2:
                 self.arrow1 = arrow.get_rect().move(1100, 460)
@@ -432,8 +419,14 @@ class Training():
                 self.arrow1 = arrow.get_rect().move(1100, 550)
                 screen.blit(arrow, self.arrow1)
             if self.tm == 5:
+                screen.fill('black', (1100, 598, 100, 50))
+                self.text_input2.enable()
+                self.text()
                 self.arrow1 = arrow.get_rect().move(1100, 610)
                 screen.blit(arrow, self.arrow1)
+            if self.tm == 6:
+                screen.fill('black', (1100, 598, 100, 53))
+                self.text()
             pygame.display.flip()
             self.manager_tr.draw_ui(screen)
             self.manager_tr.update(fps)
@@ -452,6 +445,19 @@ class Training():
             self.but_opponent_ans.enable()
         if self.tm == 6:
             print("Congratulations!")
+
+    def text(self):
+        rules = ["Ответ", "", "Противника"]
+        font = pygame.font.Font("data/F77.ttf", 13)
+        text_coord = 620
+        for line in rules:
+            self.rendered = font.render(line, True, "white")
+            self.linerect = self.rendered.get_rect()
+            text_coord += -5
+            self.linerect.top = text_coord
+            self.linerect.x = 1100
+            text_coord += self.linerect.height
+            screen.blit(self.rendered, self.linerect)
 
 
 class Story:
@@ -503,7 +509,7 @@ class Story:
                 if event.type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == first_ch:
                         # Уровни для 1-й главы
-                        pass
+                        Map('level1.txt')
                     if event.ui_element == second_ch:
                         # Уровни для 2-й главы
                         pass
@@ -571,6 +577,7 @@ def two_players():
                     arr.append(text_input.get_text())
                     WHOSETURN = 1
                     print(arr)
+                    arr.clear()
                 if event.ui_element == but_sqrt:
                     pass
                 if event.ui_element == but_opponent_ans:
