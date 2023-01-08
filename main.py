@@ -1,4 +1,11 @@
 import math
+import pygame
+import pygame_gui
+from pygame.rect import Rect
+from pygame_gui.elements import UITextEntryLine
+import sys
+import os
+import random
 
 
 class Math_question:
@@ -105,16 +112,8 @@ def factorial(question, dict):
     np = p.transformation()
     if p.checking_for_correctness():
         return str(math.factorial(eval(np)))
-    
-import pygame
-import pygame_gui
-from pygame.rect import Rect
-from pygame_gui.elements import UITextEntryLine
-import sys
-import os
 
 pygame.init()
-
 pygame.display.set_caption('Math Duels')
 screen = pygame.display.set_mode((1200, 750))
 manager = pygame_gui.UIManager((1200, 750))
@@ -155,6 +154,189 @@ def load_img(name, colorkey=None):
             colorkey = image.get_at((0, 0))
         image.set_colorkey(colorkey)
     return image
+
+
+size = width, height = 1200, 750
+FPS = 50
+screen = pygame.display.set_mode(size)
+clock = pygame.time.Clock()
+STEP = 50
+
+
+tiles_images = {
+            'tree': load_img('tree.png'),
+            'dark_tree': load_img('dark_tree.png'),
+            'empty': load_img('m22.png'),
+            'shadow': load_img('shadow.png'),
+            'place_for_a_duel': load_img('MD.png')}
+tile_width = tile_height = 100
+
+
+def terminate():
+    pygame.quit()
+    sys.exit()
+
+
+def load_level(filename):
+    filename = 'data/' + filename
+    with open(filename, 'r') as file:
+        map_level = list(map(str.strip, file.readlines()))
+    max_width = max(map(len, map_level))
+    return list(map(lambda x: x.ljust(max_width, '.'), map_level))
+
+
+class Tile(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(tile_group_map, all_sprites_map)
+        if tile_type == 'tree' or tile_type == 'dark_tree':
+            self.add(box_group_map)
+        elif tile_type == 'place_for_a_duel':
+            self.add(duels_map)
+        self.image = tiles_images[tile_type]
+        self.rect = self.image.get_rect()
+        self.rect = self.rect.move(tile_width * pos_x, tile_height * pos_y)
+
+
+def generate_level(level):
+    new_player, x, y = None, None, None
+    for y in range(len(level)):
+        for x in range(len(level[y])):
+            if level[y][x] == '.':
+                Tile('empty', x, y)
+            elif level[y][x] == '#':
+                Tile('shadow', x, y)
+                tree = random.choice(('tree', 'dark_tree'))
+                Tile(tree, x, y)
+            elif level[y][x] == '@':
+                Tile('empty', x, y)
+                new_player = Player(load_img("photo/character_go1.png"), 4, 1, x, y)
+            elif level[y][x] == 'M':
+                Tile('empty', x, y)
+                Tile('place_for_a_duel', x, y)
+    return new_player, x, y
+
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self, sheet, columns, rows, x, y):
+        super().__init__(player_group_map, all_sprites_map)
+        self.frames = []
+        self.cut_sheet(sheet, columns, rows)
+        self.cur_frame = 0
+        self.image = self.frames[self.cur_frame]
+        self.rect = self.rect.move(tile_width * x, tile_height * y)
+
+    def cut_sheet(self, sheet, columns, rows):
+        self.rect = pygame.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_location = (self.rect.w * i, self.rect.h * j)
+                self.frames.append(sheet.subsurface(pygame.Rect(
+                    frame_location, self.rect.size)))
+
+    def update(self):
+        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+        self.image = self.frames[self.cur_frame]
+
+
+class Camera:
+    def __init__(self):
+        self.dx = 0
+        self.dy = 0
+
+    def apply(self, obj, level_x, level_y):
+        obj.rect.x += self.dx
+        if obj.rect.x < -obj.rect.width:
+            obj.rect.x += (level_x + 1) * obj.rect.width
+        if obj.rect.x >= obj.rect.width * level_x:
+            obj.rect.x -= (level_x + 1) * obj.rect.width
+        obj.rect.y += self.dy
+        if obj.rect.y < -obj.rect.height:
+            obj.rect.y += (level_y + 1) * obj.rect.height
+        if obj.rect.y >= obj.rect.height * level_y:
+            obj.rect.y -= (level_y + 1) * obj.rect.height
+
+    def update(self, target):
+        self.dx = width // 2 - (target.rect.x + target.rect.w // 2)
+        self.dy = height // 2 - (target.rect.y + target.rect.h // 2)
+
+
+all_sprites_map = pygame.sprite.Group()
+tile_group_map = pygame.sprite.Group()
+player_group_map = pygame.sprite.Group()
+box_group_map = pygame.sprite.Group()
+duels_map = pygame.sprite.Group()
+player = None
+
+
+class Map():
+    def __init__(self, level):
+        running = True
+        flag = True
+        player, level_x, level_y = generate_level(load_level(level))
+        camera = Camera()
+        pygame.display.set_caption('Map')
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    terminate()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_LEFT:
+                        player.update()
+                        player.rect.x -= STEP
+                        if pygame.sprite.spritecollideany(player, box_group_map):
+                            player.rect.x += STEP
+                    if event.key == pygame.K_RIGHT:
+                        player.update()
+                        player.rect.x += STEP
+                        if pygame.sprite.spritecollideany(player, box_group_map):
+                            player.rect.x -= STEP
+                    if event.key == pygame.K_UP:
+                        player.update()
+                        player.rect.y -= STEP
+                        if pygame.sprite.spritecollideany(player, box_group_map):
+                            player.rect.y += STEP
+                    if event.key == pygame.K_DOWN:
+                        player.update()
+                        player.rect.y += STEP
+                        if pygame.sprite.spritecollideany(player, box_group_map):
+                            player.rect.y -= STEP
+                    if pygame.sprite.spritecollideany(player, duels_map):
+                        flag = False
+            camera.update(player)
+            for sprite in all_sprites_map:
+                camera.apply(sprite, level_x, level_y)
+            screen.fill((0, 0, 0))
+            all_sprites_map.draw(screen)
+            tile_group_map.draw(screen)
+            player_group_map.draw(screen)
+            pygame.display.flip()
+            clock.tick(FPS)
+            if flag is False:
+                terminate()
+
+
+def draw(i, y, arr):
+    height, width = 750, 1200
+    text_coord = height
+    font = pygame.font.Font("data/F77.ttf", 22)
+    for line in arr:
+        string_rendered = font.render(line, 1, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 20
+        intro_rect.top = text_coord - y * i
+        intro_rect.x = width // 2 - intro_rect.width // 2
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+
+def story(name):
+    arr = []
+    name = 'data/' + name
+    with open(name, 'r', encoding="utf-8") as admin:
+        result = admin.readlines()
+        for line in result:
+            arr.append(line.strip('\n'))
+    return arr
 
 
 class AnimatedSprite(pygame.sprite.Sprite):
@@ -271,12 +453,16 @@ class Training():
 
 
 class Story:
-    def __init__(self):
+    def __init__(self, name):
         super().__init__()
-        fps = 60
-        screen.fill("black")
+        st1 = story(name)
+        size = width, height = 1200, 750
+        screen = pygame.display.set_mode(size)
+        pygame.display.set_caption('Story')
+        screen.fill((0, 0, 0))
+        clock = pygame.time.Clock()
+        s = 0
         manager_st = pygame_gui.UIManager((1200, 750))
-
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -284,12 +470,12 @@ class Story:
                     sys.exit()
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
                     self.chapters()
-
                 manager_st.process_events(event)
+            screen.fill((0, 0, 0))
+            s += 1
+            draw(s, 0.1, st1)
+            clock.tick(10000000)
             pygame.display.flip()
-            manager_st.draw_ui(screen)
-            manager_st.update(fps)
-            clock.tick(fps)
 
     def chapters(self):
         fps = 60
@@ -452,12 +638,11 @@ while is_running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             is_running = False
-
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == train_button:
                 Training()
             if event.ui_element == story_button:
-                Story()
+                Story('story1.txt')
             if event.ui_element == two_players_button:
                 pass
                 two_players()
@@ -474,14 +659,3 @@ while is_running:
     manager.draw_ui(screen)
     clock.tick(fps)
 pygame.quit()
-
-
-n = input()
-p = Math_question(n)
-np = p.transformation()
-s = p.checking_for_correctness()
-if s:
-    print(p.answer())
-    print(p.print_summ())
-else:
-    print('Ошибка')
