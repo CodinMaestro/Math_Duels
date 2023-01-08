@@ -16,8 +16,6 @@ class Math_question:
             self.numbers = {}
         else:
             self.numbers = dict
-        self.numbers['1'] = 1
-        self.numbers['0'] = 1
         self.operations = {'**': 0, '*': 0, '+': 0, '-': 0, '/': 0, '!': 0, 'V‾': 0}
 
     def checking_for_correctness(self):
@@ -41,7 +39,11 @@ class Math_question:
         if len(symbols) > 0:
             if not None in symbols:
                 self.question = ''.join(symbols)
-                return True
+                if '0/' not in self.question and '*0' not in self.question \
+                        and '/0' not in self.question and '0*' not in self.question:
+                    return True
+                else:
+                    return False
 
     def transformation(self):
         s = self.problem
@@ -59,7 +61,7 @@ class Math_question:
                     self.sym.append('**')
                     if s[i] in self.operations:
                         self.operations['**'] += 1
-                elif s[i] in '+-/':
+                elif s[i] in '+-/*':
                     self.question = self.question + pr + s[i] + pr
                     self.sym.append(s[i])
                     if s[i] in self.operations:
