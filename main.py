@@ -6,6 +6,9 @@ from pygame_gui.elements import UITextEntryLine
 import sys
 import os
 import random
+import sqlite3
+con = sqlite3.connect("data/data_for_math_duels.db")
+cur = con.cursor()
 
 
 class Math_question:
@@ -536,7 +539,8 @@ def two_players():
     location = pygame.transform.scale(load_img("loc_for.png"), (1200, 500))
     screen.blit(location, location.get_rect())
 
-    text_input = UITextEntryLine(relative_rect=Rect(0, 500, 1100, 250), manager=manager_tp, placeholder_text="1 + 2 = 3")
+    text_input = UITextEntryLine(relative_rect=Rect(0, 500, 1100, 250), manager=manager_tp,
+                                 placeholder_text="1 + 2 = 3")
 
     but_sqrt = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 550), (100, 50)),
                                              text='Корень',
@@ -611,9 +615,10 @@ def settings():
     label_rect_cur = label_rect_cur.move((200, 374))
 
     screen.blit(label_cur, label_rect_cur)
-
+    x = int(cur.execute("""SELECT quantity_of_coins FROM 'primary' 
+            WHERE object = 'sound volume'""").fetchall()[0][0])
     slider = pygame_gui.elements.ui_horizontal_slider.UIHorizontalSlider(relative_rect=pygame.Rect((480, 208), (600, 30)),
-                                                                manager=manager_sett, start_value=0, value_range=(0, 100))
+                                                                manager=manager_sett, start_value=x, value_range=(0, 100))
 
     arr = ["Такой курсор", "Вот такой курсор", "И этот"]
     drop_menu = pygame_gui.elements.ui_drop_down_menu.UIDropDownMenu(options_list=arr, starting_option=arr[0],
@@ -627,6 +632,11 @@ def settings():
                 sys.exit()
             elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 pass
+            elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
+                x = event.value
+                queue = f"UPDATE 'primary' SET quantity_of_coins = {x} WHERE object = 'sound volume'"
+                cur.execute(queue)
+                con.commit()
             if event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
                 if event.ui_element == drop_menu:
                     return
