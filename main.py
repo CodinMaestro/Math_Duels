@@ -11,6 +11,9 @@ con = sqlite3.connect("data/data_for_math_duels.db")
 cur = con.cursor()
 
 
+cursor_group = pygame.sprite.Group()
+
+
 class Math_question:
     def __init__(self, line, dict=None):
         self.problem = line
@@ -117,6 +120,7 @@ def factorial(question, dict):
     np = p.transformation()
     if p.checking_for_correctness():
         return str(math.factorial(eval(np)))
+
 
 pygame.init()
 pygame.display.set_caption('Math Duels')
@@ -273,7 +277,7 @@ duels_map = pygame.sprite.Group()
 player = None
 
 
-class Map():
+class Map:
     def __init__(self, level):
         running = True
         flag = True
@@ -307,6 +311,13 @@ class Map():
                             player.rect.y -= STEP
                     if pygame.sprite.spritecollideany(player, duels_map):
                         flag = False
+                if event.type == pygame.MOUSEMOTION:
+                    if not game_cursor1 is None:
+                        xy = event.pos
+                        if pygame.mouse.get_focused():
+                            cursor_group.update(xy)
+                        else:
+                            cursor_group.update(xy, False)
             camera.update(player)
             for sprite in all_sprites_map:
                 camera.apply(sprite, level_x, level_y)
@@ -314,6 +325,7 @@ class Map():
             all_sprites_map.draw(screen)
             tile_group_map.draw(screen)
             player_group_map.draw(screen)
+            cursor_group.draw(screen)
             pygame.display.flip()
             clock.tick(FPS)
             if flag is False:
@@ -367,7 +379,7 @@ class AnimatedSprite(pygame.sprite.Sprite):
         self.image = self.frames[self.cur_frame]
 
 
-class Training():
+class Training:
     def __init__(self):
         super().__init__()
         fps = 60
@@ -403,12 +415,26 @@ class Training():
 
         while True:
             for event in pygame.event.get():
+                screen.fill((0, 0, 0))
+                self.manager_tr.draw_ui(screen)
+                screen.blit(self.location, self.location.get_rect())
+                self.text()
+                cursor_group.draw(screen)
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
                     self.tm += 1
                     self.training_move()
+                if event.type == pygame.MOUSEMOTION:
+                    if not game_cursor1 is None:
+                        xy = event.pos
+                        if pygame.mouse.get_focused():
+                            cursor_group.update(xy)
+                        else:
+                            cursor_group.update(xy, False)
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    return
                 self.manager_tr.process_events(event)
             arrow = pygame.transform.scale(load_img("arrow.png"), (100, 100))
             if self.tm == 2:
@@ -431,7 +457,6 @@ class Training():
                 screen.fill('black', (1100, 598, 100, 53))
                 self.text()
             pygame.display.flip()
-            self.manager_tr.draw_ui(screen)
             self.manager_tr.update(fps)
             clock.tick(fps)
 
@@ -481,6 +506,8 @@ class Story:
                     sys.exit()
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
                     self.chapters()
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    return
                 manager_st.process_events(event)
             screen.fill((0, 0, 0))
             s += 1
@@ -506,6 +533,9 @@ class Story:
 
         while True:
             for event in pygame.event.get():
+                screen.fill((0, 0, 0))
+                manager_ch.draw_ui(screen)
+                cursor_group.draw(screen)
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
@@ -519,9 +549,18 @@ class Story:
                     if event.ui_element == third_ch:
                         # Уровни для 3-й главы
                         pass
+                if event.type == pygame.MOUSEMOTION:
+                    if not game_cursor1 is None:
+                        xy = event.pos
+                        if pygame.mouse.get_focused():
+                            cursor_group.update(xy)
+                        else:
+                            cursor_group.update(xy, False)
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    return
                 manager_ch.process_events(event)
             pygame.display.flip()
-            manager_ch.draw_ui(screen)
+
             manager_ch.update(fps)
             clock.tick(fps)
 
@@ -553,22 +592,31 @@ def two_players():
     but_opponent_ans = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 700), (100, 50)),
                                             text='Ответ',
                                             manager=manager_tp)
-    rules = ["Ответ", "", "Противника"]
-    font = pygame.font.Font("data/F77.ttf", 13)
-    text_coord = 620
-    for line in rules:
-        rendered = font.render(line, True, "white")
-        linerect = rendered.get_rect()
-        text_coord += -5
-        linerect.top = text_coord
-        linerect.x = 1100
-        text_coord += linerect.height
-        screen.blit(rendered, linerect)
 
+    def text():
+        rules = ["Ответ", "", "Противника"]
+        font = pygame.font.Font("data/F77.ttf", 13)
+        text_coord = 620
+        for line in rules:
+            rendered = font.render(line, True, "white")
+            linerect = rendered.get_rect()
+            text_coord += -5
+            linerect.top = text_coord
+            linerect.x = 1100
+            text_coord += linerect.height
+            screen.blit(rendered, linerect)
+
+    text()
     text_input2 = UITextEntryLine(relative_rect=Rect(1100, 650, 100, 50), manager=manager_tp)
 
+    manager_tp.draw_ui(screen)
     while True:
         for event in pygame.event.get():
+            screen.fill((0, 0, 0))
+            screen.blit(location, location.get_rect())
+            manager_tp.draw_ui(screen)
+            text()
+            cursor_group.draw(screen)
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
@@ -586,10 +634,17 @@ def two_players():
                     pass
                 if event.ui_element == but_opponent_ans:
                     pass
-
+            if event.type == pygame.MOUSEMOTION:
+                if not game_cursor1 is None:
+                    xy = event.pos
+                    if pygame.mouse.get_focused():
+                        cursor_group.update(xy)
+                    else:
+                        cursor_group.update(xy, False)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                return
             manager_tp.process_events(event)
         pygame.display.flip()
-        manager_tp.draw_ui(screen)
         manager_tp.update(fps)
         clock.tick(fps)
 
@@ -598,12 +653,30 @@ def lobby():
     pass
 
 
+class Cursors(pygame.sprite.Sprite):
+    def __init__(self, image, group):
+        group.empty()
+        super().__init__(group)
+        self.image = load_img(image)
+        self.rect = self.image.get_rect()
+        self.rect.x = width + 100
+        self.rect.y = height + 100
+
+    def update(self, xy, key=True):
+        event = xy
+        if key:
+            self.rect.x = event[0]
+            self.rect.y = event[1]
+        else:
+            self.rect.x = width + 100
+            self.rect.y = height + 100
+
+
 def settings():
     fps = 60
     screen.fill("black")
     font_renderer = pygame.font.Font("data/F77.ttf", 40)
     manager_sett = pygame_gui.UIManager((1200, 750))
-
     label_vol = font_renderer.render("Звук", True, "white")
     label_rect_vol = label_vol.get_rect()
     label_rect_vol = label_rect_vol.move((200, 187))
@@ -617,30 +690,72 @@ def settings():
     screen.blit(label_cur, label_rect_cur)
     x = int(cur.execute("""SELECT quantity_of_coins FROM 'primary' 
             WHERE object = 'sound volume'""").fetchall()[0][0])
-    slider = pygame_gui.elements.ui_horizontal_slider.UIHorizontalSlider(relative_rect=pygame.Rect((480, 208), (600, 30)),
-                                                                manager=manager_sett, start_value=x, value_range=(0, 100))
+    slider = pygame_gui.elements.ui_horizontal_slider.UIHorizontalSlider(
+        relative_rect=pygame.Rect((480, 208), (600, 30)),
+        manager=manager_sett, start_value=x, value_range=(0, 100))
 
-    arr = ["Такой курсор", "Вот такой курсор", "И этот"]
-    drop_menu = pygame_gui.elements.ui_drop_down_menu.UIDropDownMenu(options_list=arr, starting_option=arr[0],
-                                                                     relative_rect=pygame.Rect((480, 400), (200, 60)),
-                                                                     manager=manager_sett)
+    arr = ["Обычный", "Карандаш", "Кастомный"]
+    y = arr.index(cur.execute("""SELECT photo_gif FROM 'primary' 
+            WHERE object = 'cursor'""").fetchall()[0][0])
+    drop_menu = pygame_gui.elements.ui_drop_down_menu.UIDropDownMenu(
+        options_list=arr, starting_option=arr[y],  relative_rect=pygame.Rect((480, 400), (200, 60)),
+        manager=manager_sett)
 
+    game_cursor = cur.execute("""SELECT photo FROM 'primary'
+     WHERE object = 'cursor'""").fetchall()[0][0]
+    if game_cursor == 'common':
+        game_cursor = None
     while True:
+        screen.fill((0, 0, 0))
+        manager_sett.draw_ui(screen)
+        screen.blit(label_vol, label_rect_vol)
+        screen.blit(label_cur, label_rect_cur)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            if event.type == pygame.MOUSEMOTION:
+                if not game_cursor is None:
+                    xy = event.pos
+                    if pygame.mouse.get_focused():
+                        cursor_group.update(xy)
+                    else:
+                        cursor_group.update(xy, False)
             elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 pass
             elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
                 x = event.value
-                queue = f"UPDATE 'primary' SET quantity_of_coins = {x} WHERE object = 'sound volume'"
+                queue = f"UPDATE 'primary' SET quantity_of_coins = {x}" \
+                        f" WHERE object = 'sound volume'"
                 cur.execute(queue)
                 con.commit()
             if event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
                 if event.ui_element == drop_menu:
-                    return
+                    values = drop_menu.selected_option
+                    queue1 = f"UPDATE 'primary' SET photo_gif = '{values}' WHERE object = 'cursor'"
+                    if values == 'Карандаш':
+                        cursor = 'cur1.png'
+                        pygame.mouse.set_visible(False)
+                    elif values == 'Кастомный':
+                        cursor = 'cur2.png'
+                        pygame.mouse.set_visible(False)
+                    else:
+                        cursor = 'common'
+                        pygame.mouse.set_visible(True)
+                    queue2 = f"UPDATE 'primary' SET photo = '{cursor}' WHERE object = 'cursor'"
+                    cur.execute(queue1)
+                    cur.execute(queue2)
+                    con.commit()
+                    screen.fill((0, 0, 0), (480, 459, 200, 100))
+                    if cursor != 'common':
+                        game_cursor = Cursors(cursor, cursor_group)
+                    else:
+                        game_cursor = None
+                        cursor_group.empty()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                return
             manager_sett.process_events(event)
+        cursor_group.draw(screen)
         pygame.display.flip()
         manager_sett.draw_ui(screen)
         manager_sett.update(fps)
@@ -652,29 +767,53 @@ all_sprites = pygame.sprite.Group()
 logo = pygame.transform.scale(load_img("logo_2.png"), (8000, 400))
 logo_go = AnimatedSprite(logo, 20, 1, 400, -50)
 clock = pygame.time.Clock()
-fps = 10
+fps = 15
+game_cursor1 = cur.execute("""SELECT photo FROM 'primary'
+ WHERE object = 'cursor'""").fetchall()[0][0]
+if game_cursor1 == 'common':
+    game_cursor1 = None
+    pygame.mouse.set_visible(True)
+else:
+    game_cursor1 = Cursors(game_cursor1, cursor_group)
+    pygame.mouse.set_visible(False)
 while is_running:
+    screen.fill((0, 0, 0))
+    manager.draw_ui(screen)
+    cursor_group.draw(screen)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             is_running = False
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == train_button:
                 Training()
+                game_cursor1 = cur.execute("""SELECT photo FROM 'primary'
+                 WHERE object = 'cursor'""").fetchall()[0][0]
+                if game_cursor1 == 'common':
+                    game_cursor1 = None
+                    pygame.mouse.set_visible(True)
+                else:
+                    game_cursor1 = Cursors(game_cursor1, cursor_group)
+                    pygame.mouse.set_visible(False)
             if event.ui_element == story_button:
                 Story('story1.txt')
             if event.ui_element == two_players_button:
-                pass
                 two_players()
             if event.ui_element == lobby_button:
                 pass
             if event.ui_element == settings_button:
                 settings()
+        if event.type == pygame.MOUSEMOTION:
+            if not game_cursor1 is None:
+                xy = event.pos
+                if pygame.mouse.get_focused():
+                    cursor_group.update(xy)
+                else:
+                    cursor_group.update(xy, False)
         manager.process_events(event)
     all_sprites.draw(screen)
     all_sprites.update()
     manager.update(fps)
     pygame.display.flip()
     screen.fill("black")
-    manager.draw_ui(screen)
     clock.tick(fps)
 pygame.quit()
