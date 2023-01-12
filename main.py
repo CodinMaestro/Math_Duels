@@ -735,7 +735,151 @@ def two_players():
 
 
 def lobby():
-    pass
+    fps = 60
+    screen.fill("black")
+    font_renderer = pygame.font.Font("data/F77.ttf", 40)
+    manager_lob = pygame_gui.UIManager((1200, 750))
+
+    but_red_skin = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((600, 0), (295, 290)),
+                                                text='',
+                                                manager=manager_lob)
+
+    but_blue_skin = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((905, 0), (295, 290)),
+                                                 text='',
+                                                 manager=manager_lob)
+
+    but_green_skin = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((600, 295), (295, 290)),
+                                                  text='',
+                                                  manager=manager_lob)
+
+    but_hood_skin = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((905, 295), (295, 290)),
+                                                 text='',
+                                                 manager=manager_lob)
+
+    but_goose = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((833, 590), (128, 160)),
+                                             text='',
+                                             manager=manager_lob)
+
+    ###############################################################################################
+    but_red_skin_purch = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((10, 0), (50, 50)),
+                                                text='',
+                                                manager=manager_lob)
+
+    but_blue_skin_purch = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((70, 0), (50, 50)),
+                                                 text='',
+                                                 manager=manager_lob)
+
+    but_green_skin_purch = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((130, 0), (50, 50)),
+                                                  text='',
+                                                  manager=manager_lob)
+
+    but_hood_skin_purch = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((190, 0), (50, 50)),
+                                                 text='',
+                                                 manager=manager_lob)
+
+    but_goose_purch = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((250, 0), (50, 50)),
+                                             text='',
+                                             manager=manager_lob)
+    # ВАЖНО!
+    but_green_skin_purch.disable()
+    but_red_skin_purch.disable()
+    but_hood_skin_purch.disable()
+    but_blue_skin_purch.disable()
+    but_goose_purch.disable()
+
+    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    red_skin_purch = pygame.transform.scale(load_img("photo/R_character.png"), (50, 50))
+    red_skins_purch = red_skin_purch.get_rect().move(10, 0)
+
+    blue_skin_purch = pygame.transform.scale(load_img("photo/B_character.png"), (50, 50))
+    blue_skins_purch = blue_skin_purch.get_rect().move(70, 0)
+
+    green_skin_purch = pygame.transform.scale(load_img("photo/G_character.png"), (50, 50))
+    green_skins_purch = green_skin_purch.get_rect().move(130, 0)
+
+    hood_skin_purch = pygame.transform.scale(load_img("photo/NY_character.png"), (50, 50))
+    hood_skins_purch = hood_skin_purch.get_rect().move(190, 0)
+
+    goose_purch = pygame.transform.scale(load_img("photo/goose.png"), (50, 50))
+    goose_s_purch = goose_purch.get_rect().move(250, -5)
+    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ###############################################################################################
+
+    label_red = font_renderer.render(f"20", True, "white")
+    label_rect_red = label_red.get_rect()
+    label_rect_red = label_rect_red.move((720, 220))
+
+    label_blue = font_renderer.render(f"40", True, "white")
+    label_rect_blue = label_blue.get_rect()
+    label_rect_blue = label_rect_blue.move((1020, 220))
+
+    label_green = font_renderer.render(f"60", True, "white")
+    label_rect_green = label_green.get_rect()
+    label_rect_green = label_rect_green.move((720, 510))
+
+    label_hood = font_renderer.render(f"100", True, "white")
+    label_rect_hood = label_hood.get_rect()
+    label_rect_hood = label_rect_hood.move((1020, 510))
+
+    label_goose = font_renderer.render(f"150", True, "white")
+    label_rect_goose = label_goose.get_rect()
+    label_rect_goose = label_rect_goose.move((833, 590))
+
+    location = pygame.transform.scale(load_img("loc_for.png"), (1200, 750))
+    screen.blit(location, location.get_rect())
+
+    red_skin = pygame.transform.scale(load_img("photo/R_character.png"), (295, 290))
+    red_skins = red_skin.get_rect().move(600, 0)
+
+    blue_skin = pygame.transform.scale(load_img("photo/B_character.png"), (295, 290))
+    blue_skins = blue_skin.get_rect().move(905, 0)
+
+    green_skin = pygame.transform.scale(load_img("photo/G_character.png"), (295, 290))
+    green_skins = green_skin.get_rect().move(600, 295)
+
+    hood_skin = pygame.transform.scale(load_img("photo/NY_character.png"), (295, 290))
+    hood_skins = hood_skin.get_rect().move(905, 295)
+
+    goose = pygame.transform.scale(load_img("photo/goose.png"), (128, 160))
+    goose_s = goose.get_rect().move(833, 590)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                return
+            '''Проверка на двойное нажатие для совершения покупки
+            if event.type == pygame.KEYDOWN and event.key == pygame.MOUSEBUTTONDOWN:
+                purchased = True'''
+            manager_lob.process_events(event)
+
+        screen.blit(red_skin, red_skins)
+        screen.blit(blue_skin, blue_skins)
+        screen.blit(green_skin, green_skins)
+        screen.blit(hood_skin, hood_skins)
+        screen.blit(goose, goose_s)
+
+        ################################################
+        # Ставим условие, что если в БД есть купленный скин, то кнопки делаем .enable()
+        screen.blit(red_skin_purch, red_skins_purch)
+        screen.blit(blue_skin_purch, blue_skins_purch)
+        screen.blit(green_skin_purch, green_skins_purch)
+        screen.blit(hood_skin_purch, hood_skins_purch)
+        screen.blit(goose_purch, goose_s_purch)
+        ################################################
+
+        screen.blit(label_red, label_rect_red)
+        screen.blit(label_blue, label_rect_blue)
+        screen.blit(label_green, label_rect_green)
+        screen.blit(label_hood, label_rect_hood)
+        screen.blit(label_goose, label_rect_goose)
+
+        pygame.display.flip()
+        manager_lob.draw_ui(screen)
+        manager_lob.update(fps)
+        clock.tick(fps)
 
 
 class Cursors(pygame.sprite.Sprite):
