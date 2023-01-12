@@ -329,7 +329,7 @@ class Map:
             pygame.display.flip()
             clock.tick(FPS)
             if flag is False:
-                terminate()
+                return
 
 
 def draw(i, y, arr):
@@ -414,12 +414,12 @@ class Training:
         self.text_input2.disable()
 
         while True:
+            screen.fill((0, 0, 0))
+            self.manager_tr.draw_ui(screen)
+            screen.blit(self.location, self.location.get_rect())
+            self.text()
+            cursor_group.draw(screen)
             for event in pygame.event.get():
-                screen.fill((0, 0, 0))
-                self.manager_tr.draw_ui(screen)
-                screen.blit(self.location, self.location.get_rect())
-                self.text()
-                cursor_group.draw(screen)
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
@@ -532,17 +532,18 @@ class Story:
                                                 manager=manager_ch)
 
         while True:
+            screen.fill((0, 0, 0))
+            manager_ch.draw_ui(screen)
+            cursor_group.draw(screen)
             for event in pygame.event.get():
-                screen.fill((0, 0, 0))
-                manager_ch.draw_ui(screen)
-                cursor_group.draw(screen)
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
                 if event.type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == first_ch:
                         # Уровни для 1-й главы
-                        Map('level1.txt')
+                        #Map('level1.txt')
+                        one_player()
                     if event.ui_element == second_ch:
                         # Уровни для 2-й главы
                         pass
@@ -564,6 +565,91 @@ class Story:
             manager_ch.update(fps)
             clock.tick(fps)
 
+
+def one_player():
+    arr = []
+    fps = 60
+    screen.fill("black")
+    manager_tp = pygame_gui.UIManager((1200, 750))
+    location = pygame.transform.scale(load_img("loc_for.png"), (1200, 500))
+    screen.blit(location, location.get_rect())
+    text_input = UITextEntryLine(relative_rect=Rect(0, 500, 1100, 200), manager=manager_tp,
+                                 placeholder_text="")
+    but_sqrt = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 550), (100, 50)),
+                                            text='Корень',
+                                            manager=manager_tp)
+
+    but_ready = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 500), (100, 50)),
+                                             text='Готово',
+                                             manager=manager_tp)
+
+    but_opponent_ans = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 700),
+                                                                              (100, 50)),
+                                                    text='Ответ',
+                                                    manager=manager_tp)
+
+    def text():
+        rules = ["Ответ", "", "на пример"]
+        font = pygame.font.Font("data/F77.ttf", 13)
+        text_coord = 620
+        for line in rules:
+            rendered = font.render(line, True, "white")
+            linerect = rendered.get_rect()
+            text_coord += -5
+            linerect.top = text_coord
+            linerect.x = 1100
+            text_coord += linerect.height
+            screen.blit(rendered, linerect)
+
+    text()
+    text_input2 = UITextEntryLine(relative_rect=Rect(1100, 650, 100, 50), manager=manager_tp)
+    font = pygame.font.Font("data/F77.ttf", 15)
+    question = ''
+    text_pr = font.render(question, True, "white")
+    while True:
+        manager_tp.draw_ui(screen)
+        screen.fill((0, 0, 0))
+        screen.blit(location, location.get_rect())
+        manager_tp.draw_ui(screen)
+        text()
+        screen.blit(text_pr, (0, 715, 0, 0))
+        cursor_group.draw(screen)
+        for event in pygame.event.get():
+            if text_input.get_text() != question:
+                question = text_input.get_text()
+            text_pr = font.render(question, True, "white")
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                pass
+                # Можно вывести содержимое
+                # print(text_input.get_text())
+            if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                if event.ui_element == but_ready:
+                    WHOSETURN = 1
+                    text_input.clear()
+                    print(arr)
+                    arr.clear()
+                if event.ui_element == but_sqrt:
+                    question = 'v‾'
+                    text_input.set_text(text_input.get_text() + 'v')
+                    print(question)
+                if event.ui_element == but_opponent_ans:
+                    pass
+            if event.type == pygame.MOUSEMOTION:
+                if not game_cursor1 is None:
+                    xy = event.pos
+                    if pygame.mouse.get_focused():
+                        cursor_group.update(xy)
+                    else:
+                        cursor_group.update(xy, False)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                return
+            manager_tp.process_events(event)
+        pygame.display.flip()
+        manager_tp.update(fps)
+        clock.tick(fps)
 
 WHOSETURN = 0
 
@@ -609,14 +695,13 @@ def two_players():
     text()
     text_input2 = UITextEntryLine(relative_rect=Rect(1100, 650, 100, 50), manager=manager_tp)
 
-    manager_tp.draw_ui(screen)
     while True:
+        screen.fill((0, 0, 0))
+        screen.blit(location, location.get_rect())
+        manager_tp.draw_ui(screen)
+        text()
+        cursor_group.draw(screen)
         for event in pygame.event.get():
-            screen.fill((0, 0, 0))
-            screen.blit(location, location.get_rect())
-            manager_tp.draw_ui(screen)
-            text()
-            cursor_group.draw(screen)
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
@@ -757,7 +842,6 @@ def settings():
             manager_sett.process_events(event)
         cursor_group.draw(screen)
         pygame.display.flip()
-        manager_sett.draw_ui(screen)
         manager_sett.update(fps)
         clock.tick(fps)
 
@@ -786,14 +870,6 @@ while is_running:
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == train_button:
                 Training()
-                game_cursor1 = cur.execute("""SELECT photo FROM 'primary'
-                 WHERE object = 'cursor'""").fetchall()[0][0]
-                if game_cursor1 == 'common':
-                    game_cursor1 = None
-                    pygame.mouse.set_visible(True)
-                else:
-                    game_cursor1 = Cursors(game_cursor1, cursor_group)
-                    pygame.mouse.set_visible(False)
             if event.ui_element == story_button:
                 Story('story1.txt')
             if event.ui_element == two_players_button:
@@ -802,6 +878,14 @@ while is_running:
                 pass
             if event.ui_element == settings_button:
                 settings()
+                game_cursor1 = cur.execute("""SELECT photo FROM 'primary'
+                                 WHERE object = 'cursor'""").fetchall()[0][0]
+                if game_cursor1 == 'common':
+                    game_cursor1 = None
+                    pygame.mouse.set_visible(True)
+                else:
+                    game_cursor1 = Cursors(game_cursor1, cursor_group)
+                    pygame.mouse.set_visible(False)
         if event.type == pygame.MOUSEMOTION:
             if not game_cursor1 is None:
                 xy = event.pos
