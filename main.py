@@ -22,7 +22,7 @@ class Math_question:
             self.numbers = {}
         else:
             self.numbers = dict
-        self.operations = {'**': 0, '*': 0, '+': 0, '-': 0, '/': 0, '!': 0, 'V‾': 0}
+        self.operations = {'**': 0, '*': 0, '+': 0, '-': 0, '/': 0, '!': 0, '√': 0}
 
     def checking_for_correctness(self):
         if len(self.question) > 100:
@@ -40,13 +40,14 @@ class Math_question:
                     return False
             if '!' in symbols[si]:
                 symbols[si] = factorial(symbols[si][1:-2], self.numbers)
-            elif 'V‾' in symbols[si]:
-                symbols[si] = root(symbols[si][3:-1], self.numbers)
+            elif '√' in symbols[si]:
+                symbols[si] = root(symbols[si][2:-1], self.numbers)
         if len(symbols) > 0:
             if not None in symbols:
                 self.question = ''.join(symbols)
                 if '0/' not in self.question and '*0' not in self.question \
-                        and '/0' not in self.question and '0*' not in self.question:
+                        and '/0' not in self.question and '0*' not in self.question\
+                        and len(self.numbers) > 0:
                     return True
                 else:
                     return False
@@ -59,7 +60,7 @@ class Math_question:
         for i in range(len(self.problem)):
             if s[i].isdigit():
                 self.question += s[i]
-            elif not s[i].isalpha() or s[i] == 'V':
+            elif not s[i].isalpha():
                 if s[i] == '.':
                     self.question += s[i]
                 elif s[i] == '*' and s[i + 1] == '*':
@@ -76,10 +77,10 @@ class Math_question:
                     self.sym.append(s[i])
                     self.question = self.question[:-1] + s[i]
                     self.operations[s[i]] += 1
-                elif s[i] == 'V' and s[i + 1] == '‾':
-                    self.sym.append('V‾')
-                    self.question += ' V‾'
-                    self.operations['V‾'] += 1
+                elif s[i] == '√':
+                    self.sym.append('√')
+                    self.question += ' √'
+                    self.operations['√'] += 1
                 elif s[i] in '()':
                     if s[i] == '(':
                         n += 1
@@ -91,6 +92,9 @@ class Math_question:
                             if s[i + 1] != ')':
                                 pr = ' '
                         self.question += s[i] + pr
+            else:
+                self.question = ''
+                return
         return self.question
 
     def answer(self):
@@ -102,7 +106,7 @@ class Math_question:
         summ += self.operations['-'] * 2
         summ += self.operations['*'] * 3
         summ += self.operations['/'] * 4
-        summ += self.operations['V‾'] * 6
+        summ += self.operations['√'] * 6
         summ += self.operations['**'] * 5
         summ += self.operations['!'] * 4
         return summ
@@ -118,6 +122,7 @@ def root(question, dict):
 def factorial(question, dict):
     p = Math_question(question, dict)
     np = p.transformation()
+    print(np)
     if p.checking_for_correctness():
         return str(math.factorial(eval(np)))
 
@@ -573,7 +578,7 @@ def one_player():
     manager_tp = pygame_gui.UIManager((1200, 750))
     location = pygame.transform.scale(load_img("loc_for.png"), (1200, 500))
     screen.blit(location, location.get_rect())
-    text_input = UITextEntryLine(relative_rect=Rect(0, 500, 1100, 200), manager=manager_tp,
+    text_input = UITextEntryLine(relative_rect=Rect(0, 550, 1100, 200), manager=manager_tp,
                                  placeholder_text="")
     but_sqrt = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 550), (100, 50)),
                                             text='Корень',
@@ -606,37 +611,81 @@ def one_player():
     font = pygame.font.Font("data/F77.ttf", 15)
     question = ''
     text_pr = font.render(question, True, "white")
+    flag = True
+    white = False
+    example = None
     while True:
         manager_tp.draw_ui(screen)
         screen.fill((0, 0, 0))
         screen.blit(location, location.get_rect())
         manager_tp.draw_ui(screen)
         text()
-        screen.blit(text_pr, (0, 715, 0, 0))
+        screen.blit(text_pr, (0, 519, 0, 0))
         cursor_group.draw(screen)
         for event in pygame.event.get():
-            if text_input.get_text() != question:
+            if text_input.get_text() != question and flag:
                 question = text_input.get_text()
-            text_pr = font.render(question, True, "white")
+            if flag or white:
+                text_pr = font.render(question, True, "white")
+            else:
+                text_pr = font.render(question, True, "red")
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                pass
-                # Можно вывести содержимое
-                # print(text_input.get_text())
+            if event.type == pygame_gui.UI_TEXT_ENTRY_CHANGED and not flag:
+                if event.ui_element != text_input2:
+                    flag = True
             if event.type == pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == but_ready:
+                    white = False
                     WHOSETURN = 1
                     text_input.clear()
-                    print(arr)
+                    example = Math_question(question)
+                    try:
+                        corr = True
+                        example.transformation()
+                        example.checking_for_correctness()
+                    except Exception:
+                        question = 'Соблюдайте правила!'
+                        flag = False
+                        corr = False
+                    if corr:
+                        try:
+                            flag = False
+                            an = example.answer()
+                            text_input.disable()
+                            white = True
+                        except Exception:
+                            print(example.question)
+                            print(example.answer())
+                            example = None
+                            question = 'Соблюдайте правила!'
+                            flag = False
+                    else:
+                        example = None
+                        question = 'Соблюдайте правила!'
+                        flag = False
                     arr.clear()
                 if event.ui_element == but_sqrt:
-                    question = 'v‾'
-                    text_input.set_text(text_input.get_text() + 'v')
-                    print(question)
+                    question = '√'
+                    text_input.set_text(text_input.get_text() + '√')
                 if event.ui_element == but_opponent_ans:
-                    pass
+                    answer = text_input2.get_text()
+                    text_input2.clear()
+                    if answer.isdigit():
+                        if example is None:
+                            text_input.set_text('Напишите пример!!!')
+                        else:
+                            n = example.answer()
+                            if n == int(answer):
+                                print(f'Вы наносите урон противнику! Силой {example.print_summ()}')
+                            else:
+                                print('Вы получаете урон')
+                        text_input.enable()
+                        flag = True
+                    else:
+                        print('Хватит пытаться сломать программу')
+                    example = None
             if event.type == pygame.MOUSEMOTION:
                 if not game_cursor1 is None:
                     xy = event.pos
@@ -1019,7 +1068,7 @@ while is_running:
             if event.ui_element == two_players_button:
                 two_players()
             if event.ui_element == lobby_button:
-                pass
+                lobby()
             if event.ui_element == settings_button:
                 settings()
                 game_cursor1 = cur.execute("""SELECT photo FROM 'primary'
