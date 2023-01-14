@@ -614,6 +614,7 @@ def one_player():
     flag = True
     white = False
     example = None
+    n = 3
     while True:
         manager_tp.draw_ui(screen)
         screen.fill((0, 0, 0))
@@ -646,9 +647,10 @@ def one_player():
                         example.transformation()
                         example.checking_for_correctness()
                     except Exception:
-                        question = 'Соблюдайте правила!'
+                        question = f'Соблюдайте правила! Количество попыток: {n}'
                         flag = False
                         corr = False
+                        n -= 1
                     if corr:
                         try:
                             flag = False
@@ -656,15 +658,15 @@ def one_player():
                             text_input.disable()
                             white = True
                         except Exception:
-                            print(example.question)
-                            print(example.answer())
                             example = None
-                            question = 'Соблюдайте правила!'
+                            question = f'Соблюдайте правила! Количество попыток {n}'
                             flag = False
+                            n -= 1
                     else:
                         example = None
-                        question = 'Соблюдайте правила!'
+                        question = f'Соблюдайте правила! Количество попыток {n}'
                         flag = False
+                        n -= 1
                     arr.clear()
                 if event.ui_element == but_sqrt:
                     question = '√'
@@ -672,19 +674,29 @@ def one_player():
                 if event.ui_element == but_opponent_ans:
                     answer = text_input2.get_text()
                     text_input2.clear()
-                    if answer.isdigit():
+                    text_input.clear()
+                    question = ''
+                    if answer.isdigit() or ('-' in answer and answer[1::].isdigit()):
                         if example is None:
                             text_input.set_text('Напишите пример!!!')
                         else:
-                            n = example.answer()
-                            if n == int(answer):
+                            if '-' in answer:
+                                answer = int(answer[1::]) * -1
+                            t = example.answer()
+                            print(answer, n)
+                            if t == int(answer) and n >= 0:
                                 print(f'Вы наносите урон противнику! Силой {example.print_summ()}')
                             else:
                                 print('Вы получаете урон')
+                            n = 3
                         text_input.enable()
                         flag = True
+                    elif example is None:
+                        text_input.set_text('Напишите пример!!!')
                     else:
                         print('Хватит пытаться сломать программу')
+                        print('Вы получаете урон')
+                        text_input.enable()
                     example = None
             if event.type == pygame.MOUSEMOTION:
                 if not game_cursor1 is None:
@@ -695,6 +707,10 @@ def one_player():
                         cursor_group.update(xy, False)
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 return
+            if n < 0:
+                print(f'Вы получаете урон')
+                flag = True
+                n = 3
             manager_tp.process_events(event)
         pygame.display.flip()
         manager_tp.update(fps)
