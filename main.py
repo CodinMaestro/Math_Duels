@@ -92,6 +92,11 @@ class Math_question:
                             if s[i + 1] != ')':
                                 pr = ' '
                         self.question += s[i] + pr
+                elif s[i] == ' ':
+                    pass
+                else:
+                    self.question = ''
+                    return
             else:
                 self.question = ''
                 return
@@ -122,7 +127,6 @@ def root(question, dict):
 def factorial(question, dict):
     p = Math_question(question, dict)
     np = p.transformation()
-    print(np)
     if p.checking_for_correctness():
         return str(math.factorial(eval(np)))
 
@@ -178,11 +182,11 @@ STEP = 50
 
 
 tiles_images = {
-            'tree': load_img('tree.png'),
-            'dark_tree': load_img('dark_tree.png'),
-            'empty': load_img('m22.png'),
-            'shadow': load_img('shadow.png'),
-            'place_for_a_duel': load_img('MD.png')}
+            'tree': load_img('chapter1/tree.png'),
+            'dark_tree': load_img('chapter1/dark_tree.png'),
+            'empty': load_img('chapter1/m22.png'),
+            'shadow': load_img('chapter1/shadow.png'),
+            'place_for_a_duel': load_img('chapter1/MD.png')}
 tile_width = tile_height = 100
 
 
@@ -362,9 +366,11 @@ def story(name):
 
 
 class AnimatedSprite(pygame.sprite.Sprite):
-    def __init__(self, sheet, columns, rows, x, y):
-        super().__init__(all_sprites)
+    def __init__(self, sheet, columns, rows, x, y, group):
+        group.empty()
+        super().__init__(group)
         self.frames = []
+        self.end = False
         self.cut_sheet(sheet, columns, rows)
         self.cur_frame = 0
         self.image = self.frames[self.cur_frame]
@@ -379,7 +385,9 @@ class AnimatedSprite(pygame.sprite.Sprite):
                 self.frames.append(sheet.subsurface(pygame.Rect(
                     frame_location, self.rect.size)))
 
-    def update(self):
+    def update(self, flag=False):
+        if flag and self.cur_frame + 1 == len(self.frames):
+            self.end = True
         self.cur_frame = (self.cur_frame + 1) % len(self.frames)
         self.image = self.frames[self.cur_frame]
 
@@ -395,27 +403,27 @@ class Training:
         self.location = pygame.transform.scale(load_img("loc_for.png"), (1200, 500))
         screen.blit(self.location, self.location.get_rect())
 
-        self.text_input = UITextEntryLine(relative_rect=Rect(0, 500, 1100, 250), manager=self.manager_tr,
-                                     placeholder_text="1 + 2 = 3")
+        self.text_input = UITextEntryLine(relative_rect=Rect(0, 500, 1100, 250),
+                                          manager=self.manager_tr, placeholder_text="1 + 2")
         self.text_input.disable()
 
-        self.but_sqrt = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 550), (100, 50)),
-                                                text='Корень',
-                                                manager=self.manager_tr)
+        self.but_sqrt = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 550),
+                                                                               (100, 50)),
+                                                     text='Корень', manager=self.manager_tr)
         self.but_sqrt.disable()
-
-        self.but_ready = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 500), (100, 50)),
-                                                 text='Готово',
-                                                 manager=self.manager_tr)
+        self.but_ready = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 500),
+                                                                                (100, 50)),
+                                                      text='Готово', manager=self.manager_tr)
         self.but_ready.disable()
 
-        self.but_opponent_ans = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 700), (100, 50)),
-                                                        text='Ответ',
-                                                        manager=self.manager_tr)
+        self.but_opponent_ans = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 700),
+                                                                                       (100, 50)),
+                                                             text='Ответ', manager=self.manager_tr)
 
         self.but_opponent_ans.disable()
         self.text()
-        self.text_input2 = UITextEntryLine(relative_rect=Rect(1100, 650, 100, 50), manager=self.manager_tr)
+        self.text_input2 = UITextEntryLine(relative_rect=Rect(1100, 650, 100, 50),
+                                           manager=self.manager_tr, placeholder_text="3")
         self.text_input2.disable()
 
         while True:
@@ -480,28 +488,25 @@ class Training:
             print("Congratulations!")
 
     def text(self):
-        rules = ["Ответ", "", "Противника"]
+        rules = ["Ответ", "", "на пример"]
         font = pygame.font.Font("data/F77.ttf", 13)
         text_coord = 620
         for line in rules:
-            self.rendered = font.render(line, True, "white")
-            self.linerect = self.rendered.get_rect()
+            rendered = font.render(line, True, "white")
+            linerect = rendered.get_rect()
             text_coord += -5
-            self.linerect.top = text_coord
-            self.linerect.x = 1100
-            text_coord += self.linerect.height
-            screen.blit(self.rendered, self.linerect)
+            linerect.top = text_coord
+            linerect.x = 1100
+            text_coord += linerect.height
+            screen.blit(rendered, linerect)
 
 
 class Story:
     def __init__(self, name):
         super().__init__()
         st1 = story(name)
-        size = width, height = 1200, 750
-        screen = pygame.display.set_mode(size)
         pygame.display.set_caption('Story')
         screen.fill((0, 0, 0))
-        clock = pygame.time.Clock()
         s = 0
         manager_st = pygame_gui.UIManager((1200, 750))
         while True:
@@ -548,7 +553,7 @@ class Story:
                     if event.ui_element == first_ch:
                         # Уровни для 1-й главы
                         #Map('level1.txt')
-                        one_player()
+                        one_player('chapter1', 'common')
                     if event.ui_element == second_ch:
                         # Уровни для 2-й главы
                         pass
@@ -571,10 +576,18 @@ class Story:
             clock.tick(fps)
 
 
-def one_player():
+def one_player(chapter, enemy):
     arr = []
     fps = 60
+    n3 = 0
+    boss = False
     screen.fill("black")
+    flag3 = False
+    if enemy == 'common':
+        Enemy = pygame.transform.scale(load_img(chapter + '/opponent' + '.png'), (2100, 300))
+    else:
+        Enemy = load_img(chapter + '/boss' + '.png')
+        boss = True
     manager_tp = pygame_gui.UIManager((1200, 750))
     location = pygame.transform.scale(load_img("loc_for.png"), (1200, 500))
     screen.blit(location, location.get_rect())
@@ -607,6 +620,16 @@ def one_player():
             screen.blit(rendered, linerect)
 
     text()
+    player_gif = pygame.transform.scale(load_img(cur.execute("""SELECT photo_gif_inaction
+     FROM 'primary' WHERE object = 'the main character'""").fetchall()[0][0]), (720, 150))
+    player_gif2 = pygame.transform.scale(load_img(cur.execute(f"""SELECT {chapter} FROM 'primary' 
+                                        WHERE object = 'the main character'""").fetchall()[0][0]),
+                                         (2160, 150))
+    player_go = AnimatedSprite(player_gif, 6, 1, 235, 280, player_group)
+    enemy_go = AnimatedSprite(Enemy, 7, 1, 650, 135, enemy_group)
+    Enemy_d = pygame.transform.scale(load_img(chapter + '/damage' + '.png'), (1500, 300))
+    roots = pygame.transform.scale(load_img(chapter + '/roots' + '.png'), (10200, 300))
+    noise = pygame.transform.scale(load_img(chapter + '/noise' + '.png'), (1500, 300))
     text_input2 = UITextEntryLine(relative_rect=Rect(1100, 650, 100, 50), manager=manager_tp)
     font = pygame.font.Font("data/F77.ttf", 15)
     question = ''
@@ -615,6 +638,10 @@ def one_player():
     white = False
     example = None
     n = 3
+    n1 = 0
+    flag1 = False
+    enemy_summ = 0
+    t = 20
     while True:
         manager_tp.draw_ui(screen)
         screen.fill((0, 0, 0))
@@ -622,6 +649,8 @@ def one_player():
         manager_tp.draw_ui(screen)
         text()
         screen.blit(text_pr, (0, 519, 0, 0))
+        player_group.draw(screen)
+        enemy_group.draw(screen)
         cursor_group.draw(screen)
         for event in pygame.event.get():
             if text_input.get_text() != question and flag:
@@ -643,9 +672,8 @@ def one_player():
                     text_input.clear()
                     example = Math_question(question)
                     try:
-                        corr = True
                         example.transformation()
-                        example.checking_for_correctness()
+                        corr = example.checking_for_correctness()
                     except Exception:
                         question = f'Соблюдайте правила! Количество попыток: {n}'
                         flag = False
@@ -683,10 +711,34 @@ def one_player():
                             if '-' in answer:
                                 answer = int(answer[1::]) * -1
                             t = example.answer()
-                            print(answer, n)
-                            if t == int(answer) and n >= 0:
+                            if t == int(answer) and n >= 0 and example.print_summ() >= enemy_summ:
                                 print(f'Вы наносите урон противнику! Силой {example.print_summ()}')
+                                player_gif1 = pygame.transform.scale(load_img(
+                                    cur.execute("""SELECT attack FROM 'primary'
+                                     WHERE object = 'the main character'""").fetchall()[0][0]),
+                                    (840, 150))
+                                player_go = AnimatedSprite(player_gif1, 7, 1, 235, 280,
+                                                           player_group)
+                                flag1 = True
+                                flag3 = True
+                                if example.operations['√'] >= 3:
+                                    t = 10
+                                    enemy_go = AnimatedSprite(roots, 34, 1, 650, 135, enemy_group)
+                                elif example.operations['!'] >= 3:
+                                    t = 20
+                                    enemy_go = AnimatedSprite(noise, 5, 1, 650, 135, enemy_group)
+                                elif example.operations['**'] >= 3:
+                                    pass
+                                else:
+                                    t = 20
+                                    enemy_go = AnimatedSprite(Enemy_d, 5, 1, 650, 135, enemy_group)
                             else:
+                                player_go = AnimatedSprite(player_gif2, 18, 1, 235, 280,
+                                                           player_group)
+                                if enemy == 'common':
+                                    enemy_go = AnimatedSprite(Enemy_d, 5, 1, 650, 135, enemy_group)
+                                flag1 = True
+                                flag3 = True
                                 print('Вы получаете урон')
                             n = 3
                         text_input.enable()
@@ -694,6 +746,9 @@ def one_player():
                     elif example is None:
                         text_input.set_text('Напишите пример!!!')
                     else:
+                        player_go = AnimatedSprite(player_gif2, 18, 1, 235, 280,
+                                                   player_group)
+                        flag1 = True
                         print('Хватит пытаться сломать программу')
                         print('Вы получаете урон')
                         text_input.enable()
@@ -708,13 +763,34 @@ def one_player():
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 return
             if n < 0:
-                print(f'Вы получаете урон')
+                player_gif2 = pygame.transform.scale(load_img(
+                    cur.execute(f"""SELECT {chapter} FROM 'primary'
+                    WHERE object = 'the main character'""").fetchall()[0][0]), (2160, 150))
+                player_go = AnimatedSprite(player_gif2, 18, 1, 235, 280,
+                                           player_group)
+                flag1 = True
                 flag = True
                 n = 3
             manager_tp.process_events(event)
+        n1 += 1
+        n3 += 1
+        if n1 % 8 == 0:
+            player_group.update(flag1)
+            if player_go.end:
+                player_go = AnimatedSprite(player_gif, 6, 1, 235, 280, player_group)
+                flag1 = False
+            n1 = 0
+        if n3 % t == 0:
+            enemy_group.update(flag3)
+            if enemy_go.end:
+                enemy_go = AnimatedSprite(Enemy, 7, 1, 650, 135, enemy_group)
+                flag3 = False
+                t = 20
+            n3 = 0
         pygame.display.flip()
         manager_tp.update(fps)
-        clock.tick(fps)
+        clock.tick(30)
+
 
 WHOSETURN = 0
 
@@ -1057,10 +1133,13 @@ def settings():
 
 is_running = True
 all_sprites = pygame.sprite.Group()
+player_group = pygame.sprite.Group()
+enemy_group = pygame.sprite.Group()
 logo = pygame.transform.scale(load_img("logo_2.png"), (8000, 400))
-logo_go = AnimatedSprite(logo, 20, 1, 400, -50)
+logo_go = AnimatedSprite(logo, 20, 1, 400, -50, all_sprites)
 clock = pygame.time.Clock()
-fps = 15
+fps = 20
+n2 = 0
 game_cursor1 = cur.execute("""SELECT photo FROM 'primary'
  WHERE object = 'cursor'""").fetchall()[0][0]
 if game_cursor1 == 'common':
@@ -1103,8 +1182,11 @@ while is_running:
                 else:
                     cursor_group.update(xy, False)
         manager.process_events(event)
+    n2 += 1
+    if n2 % 2 == 0:
+        all_sprites.update()
+        n2 = 0
     all_sprites.draw(screen)
-    all_sprites.update()
     manager.update(fps)
     pygame.display.flip()
     screen.fill("black")
