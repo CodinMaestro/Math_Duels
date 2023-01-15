@@ -12,6 +12,10 @@ cur = con.cursor()
 
 
 cursor_group = pygame.sprite.Group()
+dictionary_for_color = {'chapter1': (0, 255, 0), 'chapter2': 'pink', 'chapter3': '??'}
+dictionary_for_hp = {1: 20, 2: 30, 3: 50}
+dictionary_for_summ = {1: (15, 5, 10), 2: (20, 5, 10), 3: (30, 10, 15)}
+dictionary_for_cul = {'chapter1': [7, 5, 34, 5, 1, 7, 7, 8], 'chapter2': 'pink', 'chapter3': '??'}
 
 
 class Math_question:
@@ -115,6 +119,20 @@ class Math_question:
         summ += self.operations['**'] * 5
         summ += self.operations['!'] * 4
         return summ
+
+    def attack(self):
+        if self.operations['√'] > self.operations['!']:
+            if self.operations['√'] > self.operations['**']:
+                return ('√', self.operations['√'])
+            else:
+                return ('**', self.operations['**'])
+        else:
+            if self.operations['!'] > self.operations['**']:
+                return ('!', self.operations['!'])
+            else:
+                return ('**', self.operations['**'])
+
+
 
 
 def root(question, dict):
@@ -553,7 +571,7 @@ class Story:
                     if event.ui_element == first_ch:
                         # Уровни для 1-й главы
                         #Map('level1.txt')
-                        one_player('chapter1', 'common')
+                        one_player('chapter1', 'common', 1)
                     if event.ui_element == second_ch:
                         # Уровни для 2-й главы
                         pass
@@ -576,17 +594,20 @@ class Story:
             clock.tick(fps)
 
 
-def one_player(chapter, enemy):
+def one_player(chapter, enemy, N):
     arr = []
     fps = 60
     n3 = 0
     boss = False
     screen.fill("black")
     flag3 = False
+    arr = dictionary_for_cul[chapter]
     if enemy == 'common':
         Enemy = pygame.transform.scale(load_img(chapter + '/opponent' + '.png'), (2100, 300))
+        enemy_go = AnimatedSprite(Enemy, arr[0], 1, 650, 135, enemy_group)
     else:
-        Enemy = load_img(chapter + '/boss' + '.png')
+        Enemy = pygame.transform.scale(load_img(chapter + '/boss' + '.png'), (2275, 325))
+        enemy_go = AnimatedSprite(Enemy, arr[-2], 1, 650, 80, enemy_group)
         boss = True
     manager_tp = pygame_gui.UIManager((1200, 750))
     location = pygame.transform.scale(load_img("loc_for.png"), (1200, 500))
@@ -626,12 +647,12 @@ def one_player(chapter, enemy):
                                         WHERE object = 'the main character'""").fetchall()[0][0]),
                                          (2160, 150))
     player_go = AnimatedSprite(player_gif, 6, 1, 235, 280, player_group)
-    enemy_go = AnimatedSprite(Enemy, 7, 1, 650, 135, enemy_group)
     Enemy_d = pygame.transform.scale(load_img(chapter + '/damage' + '.png'), (1500, 300))
     roots = pygame.transform.scale(load_img(chapter + '/roots' + '.png'), (10200, 300))
     noise = pygame.transform.scale(load_img(chapter + '/noise' + '.png'), (1500, 300))
     text_input2 = UITextEntryLine(relative_rect=Rect(1100, 650, 100, 50), manager=manager_tp)
     font = pygame.font.Font("data/F77.ttf", 15)
+    font_for_money = pygame.font.Font("data/F77.ttf", 20)
     question = ''
     text_pr = font.render(question, True, "white")
     flag = True
@@ -640,12 +661,23 @@ def one_player(chapter, enemy):
     n = 3
     n1 = 0
     flag1 = False
-    enemy_summ = 0
     t = 20
+    money = pygame.transform.scale(load_img("money.png"), (35, 35))
+    enemy_summ = dictionary_for_summ[N]
+    enemy_summ = enemy_summ[0] + random.randrange(enemy_summ[1], enemy_summ[2])
+    text_summ = font_for_money.render(str(enemy_summ), True, dictionary_for_color[chapter])
     while True:
+        M = font_for_money.render(str(cur.execute("""SELECT quantity_of_coins
+            FROM 'primary' WHERE object = 'the main character'""").fetchall()[0][0]), True,
+                                  "Orange")
+        x = 1150 - (len(str(cur.execute("""SELECT quantity_of_coins 
+        FROM 'primary' WHERE object = 'the main character'""").fetchall()[0][0])) * 17)
         manager_tp.draw_ui(screen)
         screen.fill((0, 0, 0))
         screen.blit(location, location.get_rect())
+        screen.blit(money, (1150, 20))
+        screen.blit(M, (x, 28))
+        screen.blit(text_summ, (775, 100))
         manager_tp.draw_ui(screen)
         text()
         screen.blit(text_pr, (0, 519, 0, 0))
@@ -687,15 +719,14 @@ def one_player(chapter, enemy):
                             white = True
                         except Exception:
                             example = None
-                            question = f'Соблюдайте правила! Количество попыток {n}'
+                            question = f'Соблюдайте правила! Количество попыток: {n}'
                             flag = False
                             n -= 1
                     else:
                         example = None
-                        question = f'Соблюдайте правила! Количество попыток {n}'
+                        question = f'Соблюдайте правила! Количество попыток: {n}'
                         flag = False
                         n -= 1
-                    arr.clear()
                 if event.ui_element == but_sqrt:
                     question = '√'
                     text_input.set_text(text_input.get_text() + '√')
@@ -710,33 +741,47 @@ def one_player(chapter, enemy):
                         else:
                             if '-' in answer:
                                 answer = int(answer[1::]) * -1
-                            t = example.answer()
-                            if t == int(answer) and n >= 0 and example.print_summ() >= enemy_summ:
+                            y = example.answer()
+                            if y == int(answer) and n >= 0 and example.print_summ() >= enemy_summ:
                                 print(f'Вы наносите урон противнику! Силой {example.print_summ()}')
                                 player_gif1 = pygame.transform.scale(load_img(
                                     cur.execute("""SELECT attack FROM 'primary'
                                      WHERE object = 'the main character'""").fetchall()[0][0]),
                                     (840, 150))
+                                now = cur.execute("""SELECT quantity_of_coins FROM 'primary'
+                                 WHERE object = 'the main character'""").fetchall()[0][0]
+                                x = round(now + example.print_summ() * 0.4)
+                                queue = f"UPDATE 'primary' SET quantity_of_coins = {x}" \
+                                        f" WHERE object = 'the main character'"
+                                cur.execute(queue)
+                                con.commit()
                                 player_go = AnimatedSprite(player_gif1, 7, 1, 235, 280,
                                                            player_group)
                                 flag1 = True
-                                flag3 = True
-                                if example.operations['√'] >= 3:
-                                    t = 10
-                                    enemy_go = AnimatedSprite(roots, 34, 1, 650, 135, enemy_group)
-                                elif example.operations['!'] >= 3:
-                                    t = 20
-                                    enemy_go = AnimatedSprite(noise, 5, 1, 650, 135, enemy_group)
-                                elif example.operations['**'] >= 3:
-                                    pass
-                                else:
-                                    t = 20
-                                    enemy_go = AnimatedSprite(Enemy_d, 5, 1, 650, 135, enemy_group)
+                                cor = example.attack()
+                                if enemy == 'common':
+                                    flag3 = True
+                                    if cor[1] >= 3 and cor[0] == '√':
+                                        t = 10
+                                        enemy_go = AnimatedSprite(roots, arr[2], 1, 650, 135,
+                                                                  enemy_group)
+                                    elif cor[1] >= 3 and cor[0] == '!':
+                                        t = 20
+                                        enemy_go = AnimatedSprite(noise, arr[3], 1, 650, 135,
+                                                                  enemy_group)
+                                    elif cor[1] >= 3 and cor[0] == '**':
+                                        pass
+                                    else:
+                                        t = 20
+                                        enemy_go = AnimatedSprite(Enemy_d, arr[1], 1, 650, 135,
+                                                                  enemy_group)
                             else:
+                                print(example.print_summ())
                                 player_go = AnimatedSprite(player_gif2, 18, 1, 235, 280,
                                                            player_group)
                                 if enemy == 'common':
-                                    enemy_go = AnimatedSprite(Enemy_d, 5, 1, 650, 135, enemy_group)
+                                    enemy_go = AnimatedSprite(Enemy_d, arr[1], 1, 650, 135,
+                                                              enemy_group)
                                 flag1 = True
                                 flag3 = True
                                 print('Вы получаете урон')
@@ -783,7 +828,11 @@ def one_player(chapter, enemy):
         if n3 % t == 0:
             enemy_group.update(flag3)
             if enemy_go.end:
-                enemy_go = AnimatedSprite(Enemy, 7, 1, 650, 135, enemy_group)
+                if enemy == 'common':
+                    e = arr[0]
+                else:
+                    e = arr[-2]
+                enemy_go = AnimatedSprite(Enemy, e, 1, 650, 135, enemy_group)
                 flag3 = False
                 t = 20
             n3 = 0
