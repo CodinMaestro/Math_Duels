@@ -1004,7 +1004,8 @@ def two_players():
                                     else:
                                         sum2 = example.print_summ()
                                         people = 1
-                                        two_people_made_a_move = True
+                                        if sum1 != sum2:
+                                            two_people_made_a_move = True
                                 else:
                                     if people == 1:
                                         sum1 = 0
@@ -1012,7 +1013,8 @@ def two_players():
                                     else:
                                         sum2 = 0
                                         people = 1
-                                        two_people_made_a_move = True
+                                        if sum1 != sum2:
+                                            two_people_made_a_move = True
                                 n = 3
                         text_input.enable()
                         flag = True
