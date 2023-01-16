@@ -595,10 +595,8 @@ class Story:
 
 
 def one_player(chapter, enemy, N):
-    arr = []
     fps = 60
     n3 = 0
-    boss = False
     screen.fill("black")
     flag3 = False
     arr = dictionary_for_cul[chapter]
@@ -610,7 +608,7 @@ def one_player(chapter, enemy, N):
         enemy_go = AnimatedSprite(Enemy, arr[-2], 1, 650, 80, enemy_group)
         boss = True
     manager_tp = pygame_gui.UIManager((1200, 750))
-    location = pygame.transform.scale(load_img("loc_for.png"), (1200, 500))
+    location = pygame.transform.scale(load_img(chapter + "/loc_for.png"), (1200, 500))
     screen.blit(location, location.get_rect())
     text_input = UITextEntryLine(relative_rect=Rect(0, 550, 1100, 200), manager=manager_tp,
                                  placeholder_text="")
@@ -700,7 +698,6 @@ def one_player(chapter, enemy, N):
             if event.type == pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == but_ready:
                     white = False
-                    WHOSETURN = 1
                     text_input.clear()
                     example = Math_question(question)
                     try:
@@ -846,31 +843,35 @@ WHOSETURN = 0
 
 def two_players():
     global WHOSETURN
-    arr = []
     fps = 60
+    n3 = 0
+    expl_1 = ''
+    expl_2 = ''
+    sum1 = ''
+    sum2 = ''
+    people = 1
+    two_people_made_a_move = False
     screen.fill("black")
     manager_tp = pygame_gui.UIManager((1200, 750))
-
     location = pygame.transform.scale(load_img("loc_for.png"), (1200, 500))
     screen.blit(location, location.get_rect())
-
-    text_input = UITextEntryLine(relative_rect=Rect(0, 500, 1100, 250), manager=manager_tp,
-                                 placeholder_text="1 + 2 = 3")
-
+    text_input = UITextEntryLine(relative_rect=Rect(0, 550, 1100, 200), manager=manager_tp,
+                                 placeholder_text="")
     but_sqrt = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 550), (100, 50)),
-                                             text='Корень',
-                                             manager=manager_tp)
+                                            text='Корень',
+                                            manager=manager_tp)
 
     but_ready = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 500), (100, 50)),
-                                            text='Готово',
-                                            manager=manager_tp)
+                                             text='Готово',
+                                             manager=manager_tp)
 
-    but_opponent_ans = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 700), (100, 50)),
-                                            text='Ответ',
-                                            manager=manager_tp)
+    but_opponent_ans = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 700),
+                                                                              (100, 50)),
+                                                    text='Ответ',
+                                                    manager=manager_tp)
 
     def text():
-        rules = ["Ответ", "", "Противника"]
+        rules = ["Ответ", "", "на пример"]
         font = pygame.font.Font("data/F77.ttf", 13)
         text_coord = 620
         for line in rules:
@@ -883,32 +884,151 @@ def two_players():
             screen.blit(rendered, linerect)
 
     text()
+    player_gif = pygame.transform.scale(load_img(cur.execute("""SELECT photo_gif_inaction
+         FROM 'primary' WHERE object = 'the main character'""").fetchall()[0][0]), (720, 150))
+    player_gif_02 = pygame.transform.scale(load_img(cur.execute("""SELECT photo_gif_inaction
+         FROM 'primary' WHERE object = 'red suit'""").fetchall()[0][0]), (720, 150))
+    player_gif_2 = pygame.transform.flip(player_gif_02, True, False)
+    player_go_2 = AnimatedSprite(player_gif_2, 6, 1, 730, 250, player_group_02)
+    player_go = AnimatedSprite(player_gif, 6, 1, 235, 280, player_group)
     text_input2 = UITextEntryLine(relative_rect=Rect(1100, 650, 100, 50), manager=manager_tp)
-
+    font = pygame.font.Font("data/F77.ttf", 15)
+    font_for_money = pygame.font.Font("data/F77.ttf", 20)
+    question = ''
+    text_pr = font.render(question, True, "white")
+    flag = True
+    white = False
+    example = None
+    n = 3
+    n1 = 0
+    flag1 = False
+    money = pygame.transform.scale(load_img("money.png"), (35, 35))
+    summ_1 = font_for_money.render(str(sum1), True, (255, 255, 255))
+    summ_2 = font_for_money.render(str(sum2), True, (255, 0, 0))
+    help = ''
     while True:
+        summ_1 = font_for_money.render(str(sum1), True, (255, 255, 255))
+        summ_2 = font_for_money.render(str(sum2), True, (255, 0, 0))
+        M = font_for_money.render(str(cur.execute("""SELECT quantity_of_coins
+                FROM 'primary' WHERE object = 'the main character'""").fetchall()[0][0]), True,
+                                  "Orange")
+        x = 1150 - (len(str(cur.execute("""SELECT quantity_of_coins 
+            FROM 'primary' WHERE object = 'the main character'""").fetchall()[0][0])) * 17)
+        manager_tp.draw_ui(screen)
         screen.fill((0, 0, 0))
         screen.blit(location, location.get_rect())
+        screen.blit(money, (1150, 20))
+        screen.blit(summ_1, (285, 240))
+        screen.blit(summ_2, (785, 210))
+        screen.blit(M, (x, 28))
         manager_tp.draw_ui(screen)
         text()
+        screen.blit(text_pr, (0, 519, 0, 0))
+        player_group.draw(screen)
+        player_group_02.draw(screen)
         cursor_group.draw(screen)
         for event in pygame.event.get():
+            if text_input.get_text() != question and flag:
+                question = text_input.get_text()
+            if flag or white:
+                text_pr = font.render(question, True, "white")
+            else:
+                text_pr = font.render(question, True, "red")
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                pass
-                # Можно вывести содержимое
-                # print(text_input.get_text())
+            if event.type == pygame_gui.UI_TEXT_ENTRY_CHANGED and not flag:
+                if event.ui_element != text_input2:
+                    flag = True
             if event.type == pygame_gui.UI_BUTTON_PRESSED:
-                if event.ui_element == but_ready:
-                    arr.append(text_input.get_text())
+                if event.ui_element == but_ready and two_people_made_a_move is False:
+                    white = False
                     WHOSETURN = 1
-                    print(arr)
-                    arr.clear()
+                    text_input.clear()
+                    example = Math_question(question)
+                    if people == 1:
+                        expl_1 = question
+                    else:
+                        expl_2 = question
+                    try:
+                        example.transformation()
+                        corr = example.checking_for_correctness()
+                    except Exception:
+                        question = f'Соблюдайте правила! Количество попыток: {n}'
+                        flag = False
+                        corr = False
+                        n -= 1
+                    if corr:
+                        try:
+                            flag = False
+                            an = example.answer()
+                            text_input.disable()
+                            white = True
+                        except Exception:
+                            example = None
+                            question = f'Соблюдайте правила! Количество попыток: {n}'
+                            flag = False
+                            n -= 1
+                    else:
+                        example = None
+                        question = f'Соблюдайте правила! Количество попыток: {n}'
+                        flag = False
+                        n -= 1
                 if event.ui_element == but_sqrt:
-                    pass
+                    question = '√'
+                    text_input.set_text(text_input.get_text() + '√')
                 if event.ui_element == but_opponent_ans:
-                    pass
+                    answer = text_input2.get_text()
+                    text_input2.clear()
+                    text_input.clear()
+                    if answer.isdigit() or ('-' in answer and answer[1::].isdigit()):
+                        if example is None and two_people_made_a_move is False:
+                            text_input.set_text('Напишите пример!!!')
+                        else:
+                            if '-' in answer:
+                                answer = int(answer[1::]) * -1
+                            if two_people_made_a_move:
+                                example_new = Math_question(question)
+                                example_new.transformation()
+                                example_new.checking_for_correctness()
+                                if int(answer) == example_new.answer():
+                                    help = True
+                                else:
+                                    help = False
+                            else:
+                                y = example.answer()
+                                if y == int(answer) and n >= 0:
+                                    if people == 1:
+                                        sum1 = example.print_summ()
+                                        people = 2
+                                    else:
+                                        sum2 = example.print_summ()
+                                        people = 1
+                                        two_people_made_a_move = True
+                                else:
+                                    if people == 1:
+                                        sum1 = 0
+                                        people = 2
+                                    else:
+                                        sum2 = 0
+                                        people = 1
+                                        two_people_made_a_move = True
+                                n = 3
+                        text_input.enable()
+                        flag = True
+                    elif example is None and two_people_made_a_move is False:
+                        text_input.set_text('Напишите пример!!!')
+                    else:
+                        if people == 1:
+                            sum1 = 0
+                            people = 2
+                        else:
+                            sum2 = 0
+                            people = 1
+                            two_people_made_a_move = True
+                        text_input.enable()
+                    example = None
+                    question = ''
             if event.type == pygame.MOUSEMOTION:
                 if not game_cursor1 is None:
                     xy = event.pos
@@ -918,10 +1038,55 @@ def two_players():
                         cursor_group.update(xy, False)
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 return
+            if n < 0:
+                if people == 1:
+                    sum1 = 0
+                    people = 2
+                else:
+                    sum2 = 0
+                    people = 1
+                    two_people_made_a_move = True
+                flag1 = True
+                flag = True
+                n = 3
             manager_tp.process_events(event)
+        if n1 % 8 == 0:
+            player_group.update(flag1)
+            player_group_02.update(flag1)
+            if player_go.end:
+                player_go = AnimatedSprite(player_gif, 6, 1, 235, 280, player_group)
+                flag1 = False
+            n1 = 0
+        n1 += 1
+        n3 += 1
+        if two_people_made_a_move:
+            flag = False
+            if sum1 > sum2:
+                question = expl_1
+                text_input.set_text('Игрок второй, чтобы снизить урон, который вы получите,'
+                                    ' решите пример противника')
+            else:
+                question = expl_2
+                text_input.set_text('Игрок первый, чтобы снизить урон, который вы получите,'
+                                    ' решите пример противника')
+        if help != '':
+            two_people_made_a_move = False
+            if sum1 > sum2 and help:
+                sum1 *= 0.5
+            elif sum2 > sum1 and help:
+                sum2 *= 0.5
+            help = ''
+            if sum1 > sum2:
+                print(f'Первый противника наносит урон {sum1}')
+            else:
+                print(f'Второй противника наносит урон {sum2}')
+            sum1 = ''
+            sum2 = ''
+            flag = True
+            text_input.clear()
         pygame.display.flip()
         manager_tp.update(fps)
-        clock.tick(fps)
+        clock.tick(30)
 
 
 def lobby():
@@ -1183,6 +1348,7 @@ def settings():
 is_running = True
 all_sprites = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
+player_group_02 = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 logo = pygame.transform.scale(load_img("logo_2.png"), (8000, 400))
 logo_go = AnimatedSprite(logo, 20, 1, 400, -50, all_sprites)
