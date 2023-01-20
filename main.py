@@ -902,6 +902,7 @@ def two_players():
     n = 3
     n1 = 0
     flag1 = False
+    flag2 = False
     money = pygame.transform.scale(load_img("money.png"), (35, 35))
     summ_1 = font_for_money.render(str(sum1), True, (255, 255, 255))
     summ_2 = font_for_money.render(str(sum2), True, (255, 0, 0))
@@ -1015,6 +1016,9 @@ def two_players():
                                         people = 1
                                         if sum1 != sum2:
                                             two_people_made_a_move = True
+                                        else:
+                                            sum1 = ''
+                                            sum2 = ''
                                 n = 3
                         text_input.enable()
                         flag = True
@@ -1027,7 +1031,11 @@ def two_players():
                         else:
                             sum2 = 0
                             people = 1
-                            two_people_made_a_move = True
+                            if sum1 != sum2:
+                                two_people_made_a_move = True
+                            else:
+                                sum1 = ''
+                                sum2 = ''
                         text_input.enable()
                     example = None
                     question = ''
@@ -1047,20 +1055,27 @@ def two_players():
                 else:
                     sum2 = 0
                     people = 1
-                    two_people_made_a_move = True
+                    if sum1 != sum2:
+                        two_people_made_a_move = True
+                    else:
+                        sum1 = ''
+                        sum2 = ''
                 flag1 = True
                 flag = True
                 n = 3
             manager_tp.process_events(event)
+        n1 += 1
+        n3 += 1
         if n1 % 8 == 0:
             player_group.update(flag1)
-            player_group_02.update(flag1)
+            player_group_02.update(flag2)
             if player_go.end:
                 player_go = AnimatedSprite(player_gif, 6, 1, 235, 280, player_group)
                 flag1 = False
+            if player_go_2.end:
+                player_go_2 = AnimatedSprite(player_gif_2, 6, 1, 730, 250, player_group_02)
+                flag2 = False
             n1 = 0
-        n1 += 1
-        n3 += 1
         if two_people_made_a_move:
             flag = False
             if sum1 > sum2:
@@ -1078,9 +1093,26 @@ def two_players():
             elif sum2 > sum1 and help:
                 sum2 *= 0.5
             help = ''
+            flag1 = True
+            flag2 = True
             if sum1 > sum2:
+                example = Math_question(expl_1)
+                example.transformation()
+                example.checking_for_correctness()
+                par = example.attack()
+                print(par)
+                player_gif1 = pygame.transform.scale(load_img(
+                    cur.execute("""SELECT attack FROM 'primary' 
+                    WHERE object = 'the main character'""").fetchall()[0][0]), (840, 150))
+                player_go = AnimatedSprite(player_gif1, 7, 1, 235, 280, player_group)
                 print(f'Первый противника наносит урон {sum1}')
             else:
+                player_gif_02_atk = pygame.transform.scale(load_img(
+                    cur.execute("""SELECT attack FROM 'primary' 
+                                    WHERE object = 'red suit'""").fetchall()[0][0]),
+                    (840, 150))
+                player_gif_02_atk = pygame.transform.flip(player_gif_02_atk, True, False)
+                player_go_2 = AnimatedSprite(player_gif_02_atk, 7, 1, 730, 250, player_group_02)
                 print(f'Второй противника наносит урон {sum2}')
             sum1 = ''
             sum2 = ''
