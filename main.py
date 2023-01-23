@@ -16,6 +16,7 @@ dictionary_for_color = {'chapter1': (0, 255, 0), 'chapter2': 'pink', 'chapter3':
 dictionary_for_hp = {1: 20, 2: 30, 3: 50}
 dictionary_for_summ = {1: (15, 5, 10), 2: (20, 5, 10), 3: (30, 10, 15)}
 dictionary_for_cul = {'chapter1': [7, 5, 34, 5, 1, 7, 7, 8], 'chapter2': 'pink', 'chapter3': '??'}
+dictionary_for_atk = {'chapter1': 18, 'chapter2': 9, 'chapter3': '??'}
 
 
 class Math_question:
@@ -123,14 +124,14 @@ class Math_question:
     def attack(self):
         if self.operations['√'] > self.operations['!']:
             if self.operations['√'] > self.operations['**']:
-                return ('√', self.operations['√'])
+                return '√', self.operations['√']
             else:
-                return ('**', self.operations['**'])
+                return '**', self.operations['**']
         else:
             if self.operations['!'] > self.operations['**']:
-                return ('!', self.operations['!'])
+                return '!', self.operations['!']
             else:
-                return ('**', self.operations['**'])
+                return '**', self.operations['**']
 
 
 
@@ -774,7 +775,8 @@ def one_player(chapter, enemy, N):
                                                                   enemy_group)
                             else:
                                 print(example.print_summ())
-                                player_go = AnimatedSprite(player_gif2, 18, 1, 235, 280,
+                                player_go = AnimatedSprite(player_gif2, dictionary_for_atk[chapter],
+                                                           1, 235, 280,
                                                            player_group)
                                 if enemy == 'common':
                                     enemy_go = AnimatedSprite(Enemy_d, arr[1], 1, 650, 135,
@@ -788,8 +790,8 @@ def one_player(chapter, enemy, N):
                     elif example is None:
                         text_input.set_text('Напишите пример!!!')
                     else:
-                        player_go = AnimatedSprite(player_gif2, 18, 1, 235, 280,
-                                                   player_group)
+                        player_go = AnimatedSprite(player_gif2, dictionary_for_atk[chapter], 1, 235,
+                                                   280, player_group)
                         flag1 = True
                         print('Хватит пытаться сломать программу')
                         print('Вы получаете урон')
@@ -805,10 +807,7 @@ def one_player(chapter, enemy, N):
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 return
             if n < 0:
-                player_gif2 = pygame.transform.scale(load_img(
-                    cur.execute(f"""SELECT {chapter} FROM 'primary'
-                    WHERE object = 'the main character'""").fetchall()[0][0]), (2160, 150))
-                player_go = AnimatedSprite(player_gif2, 18, 1, 235, 280,
+                player_go = AnimatedSprite(player_gif2, dictionary_for_atk[chapter], 1, 235, 280,
                                            player_group)
                 flag1 = True
                 flag = True
@@ -845,6 +844,16 @@ def two_players():
     global WHOSETURN
     fps = 60
     n3 = 0
+    player_01_roots = pygame.transform.scale(load_img(cur.execute(f"""SELECT chapter1 FROM 'primary' 
+    WHERE object = 'the main character'""").fetchall()[0][0]), (2160, 150))
+    player_02_roots = pygame.transform.scale(load_img(cur.execute(f"""SELECT chapter1 FROM 'primary' 
+        WHERE object = 'red suit'""").fetchall()[0][0]), (2160, 150))
+    player_02_roots = pygame.transform.flip(player_02_roots, True, False)
+    player_02_sounds = pygame.transform.scale(load_img(cur.execute(f"""SELECT chapter2
+     FROM 'primary' WHERE object = 'red suit'""").fetchall()[0][0]), (1080, 150))
+    player_02_sounds = pygame.transform.flip(player_02_sounds, True, False)
+    player_01_sounds = pygame.transform.scale(load_img(cur.execute(f"""SELECT chapter2
+     FROM 'primary' WHERE object = 'the main character'""").fetchall()[0][0]), (1080, 150))
     expl_1 = ''
     expl_2 = ''
     sum1 = ''
@@ -1096,21 +1105,33 @@ def two_players():
             flag1 = True
             flag2 = True
             if sum1 > sum2:
-                example = Math_question(expl_1)
-                example.transformation()
-                example.checking_for_correctness()
-                par = example.attack()
+                example2 = Math_question(expl_1)
+                example2.transformation()
+                example2.checking_for_correctness()
+                par = example2.attack()
                 print(par)
+                if par[0] == '√' and par[1] > 2:
+                    player_go_2 = AnimatedSprite(player_02_roots, 18, 1, 730, 250, player_group_02)
+                elif par[0] == '!' and par[1] > 2:
+                    player_go_2 = AnimatedSprite(player_02_sounds, 9, 1, 730, 250, player_group_02)
                 player_gif1 = pygame.transform.scale(load_img(
                     cur.execute("""SELECT attack FROM 'primary' 
                     WHERE object = 'the main character'""").fetchall()[0][0]), (840, 150))
                 player_go = AnimatedSprite(player_gif1, 7, 1, 235, 280, player_group)
                 print(f'Первый противника наносит урон {sum1}')
             else:
+                example2 = Math_question(expl_2)
+                example2.transformation()
+                example2.checking_for_correctness()
+                par = example2.attack()
+                print(par)
+                if par[0] == '√' and par[1] > 2:
+                    player_go = AnimatedSprite(player_01_roots, 18, 1, 235, 280, player_group)
+                elif par[0] == '!' and par[1] > 2:
+                    player_go = AnimatedSprite(player_01_sounds, 9, 1, 235, 280, player_group)
                 player_gif_02_atk = pygame.transform.scale(load_img(
                     cur.execute("""SELECT attack FROM 'primary' 
-                                    WHERE object = 'red suit'""").fetchall()[0][0]),
-                    (840, 150))
+                                    WHERE object = 'red suit'""").fetchall()[0][0]), (840, 150))
                 player_gif_02_atk = pygame.transform.flip(player_gif_02_atk, True, False)
                 player_go_2 = AnimatedSprite(player_gif_02_atk, 7, 1, 730, 250, player_group_02)
                 print(f'Второй противника наносит урон {sum2}')
