@@ -14,7 +14,7 @@ cur = con.cursor()
 cursor_group = pygame.sprite.Group()
 dictionary_for_color = {'chapter1': (0, 255, 0), 'chapter2': 'pink', 'chapter3': '??'}
 dictionary_for_hp = {1: 20, 2: 30, 3: 50}
-dictionary_for_summ = {1: (15, 5, 10), 2: (20, 5, 10), 3: (30, 10, 15)}
+dictionary_for_summ = {1: (7, 5, 10), 2: (11, 5, 10), 3: (15, 10, 15)}
 dictionary_for_cul = {'chapter1': [7, 5, 34, 5, 1, 7, 7, 8], 'chapter2': 'pink', 'chapter3': '??'}
 dictionary_for_atk = {'chapter1': 18, 'chapter2': 9, 'chapter3': '??'}
 
@@ -134,20 +134,18 @@ class Math_question:
                 return '**', self.operations['**']
 
 
-
-
 def root(question, dict):
     p = Math_question(question, dict)
     np = p.transformation()
     if p.checking_for_correctness():
-        return str(math.sqrt(eval(np)))
+        return str(round(math.sqrt(eval(np))))
 
 
 def factorial(question, dict):
     p = Math_question(question, dict)
     np = p.transformation()
     if p.checking_for_correctness():
-        return str(math.factorial(eval(np)))
+        return str(round(math.factorial(eval(np))))
 
 
 pygame.init()
@@ -204,6 +202,7 @@ tiles_images = {
             'tree': load_img('chapter1/tree.png'),
             'dark_tree': load_img('chapter1/dark_tree.png'),
             'empty': load_img('chapter1/m22.png'),
+            'empty2': load_img('chapter1/m33.png'),
             'shadow': load_img('chapter1/shadow.png'),
             'place_for_a_duel': load_img('chapter1/MD.png')}
 tile_width = tile_height = 100
@@ -240,12 +239,20 @@ def generate_level(level):
         for x in range(len(level[y])):
             if level[y][x] == '.':
                 Tile('empty', x, y)
+            if level[y][x] == ',':
+                Tile('empty2', x, y)
             elif level[y][x] == '#':
                 Tile('shadow', x, y)
                 tree = random.choice(('tree', 'dark_tree'))
                 Tile(tree, x, y)
             elif level[y][x] == '@':
-                Tile('empty', x, y)
+                if level[y][x + 1] == '.':
+                    ch = 'empty'
+                elif level[y][x + 1] == ',':
+                    ch = 'empty2'
+                else:
+                    ch = 'empty3'
+                Tile(ch, x, y)
                 new_player = Player(load_img("photo/character_go1.png"), 4, 1, x, y)
             elif level[y][x] == 'M':
                 Tile('empty', x, y)
@@ -603,10 +610,14 @@ def one_player(chapter, enemy, N):
     arr = dictionary_for_cul[chapter]
     if enemy == 'common':
         Enemy = pygame.transform.scale(load_img(chapter + '/opponent' + '.png'), (2100, 300))
+        Enemy_death = pygame.transform.scale(load_img(chapter + '/death' + '.png'), (2100, 300))
         enemy_go = AnimatedSprite(Enemy, arr[0], 1, 650, 135, enemy_group)
+        xe = 100
     else:
         Enemy = pygame.transform.scale(load_img(chapter + '/boss' + '.png'), (2275, 325))
+        Enemy_death = pygame.transform.scale(load_img(chapter + '/victory' + '.png'), (2600, 325))
         enemy_go = AnimatedSprite(Enemy, arr[-2], 1, 650, 80, enemy_group)
+        xe = 30
         boss = True
     manager_tp = pygame_gui.UIManager((1200, 750))
     location = pygame.transform.scale(load_img(chapter + "/loc_for.png"), (1200, 500))
@@ -642,6 +653,8 @@ def one_player(chapter, enemy, N):
     text()
     player_gif = pygame.transform.scale(load_img(cur.execute("""SELECT photo_gif_inaction
      FROM 'primary' WHERE object = 'the main character'""").fetchall()[0][0]), (720, 150))
+    player_death = pygame.transform.scale(load_img(cur.execute("""SELECT death
+         FROM 'primary' WHERE object = 'the main character'""").fetchall()[0][0]), (960, 150))
     player_gif2 = pygame.transform.scale(load_img(cur.execute(f"""SELECT {chapter} FROM 'primary' 
                                         WHERE object = 'the main character'""").fetchall()[0][0]),
                                          (2160, 150))
@@ -650,11 +663,15 @@ def one_player(chapter, enemy, N):
     roots = pygame.transform.scale(load_img(chapter + '/roots' + '.png'), (10200, 300))
     noise = pygame.transform.scale(load_img(chapter + '/noise' + '.png'), (1500, 300))
     text_input2 = UITextEntryLine(relative_rect=Rect(1100, 650, 100, 50), manager=manager_tp)
+    maxm_hp_gg = '/' + str(dictionary_for_hp[N])
+    maxm_hp_en = '/' + str(dictionary_for_hp[N])
     font = pygame.font.Font("data/F77.ttf", 15)
     font_for_money = pygame.font.Font("data/F77.ttf", 20)
     question = ''
     text_pr = font.render(question, True, "white")
     flag = True
+    DEATH = False
+    DEATH_en = False
     white = False
     example = None
     n = 3
@@ -665,6 +682,10 @@ def one_player(chapter, enemy, N):
     enemy_summ = dictionary_for_summ[N]
     enemy_summ = enemy_summ[0] + random.randrange(enemy_summ[1], enemy_summ[2])
     text_summ = font_for_money.render(str(enemy_summ), True, dictionary_for_color[chapter])
+    now_hp_gg = int(maxm_hp_gg[1:])
+    now_hp_en = int(maxm_hp_en[1:])
+    maxm_hp_gg = font.render(maxm_hp_gg, True, (127, 255, 0))
+    maxm_hp_en = font.render(maxm_hp_en, True, (127, 255, 0))
     while True:
         M = font_for_money.render(str(cur.execute("""SELECT quantity_of_coins
             FROM 'primary' WHERE object = 'the main character'""").fetchall()[0][0]), True,
@@ -676,7 +697,25 @@ def one_player(chapter, enemy, N):
         screen.blit(location, location.get_rect())
         screen.blit(money, (1150, 20))
         screen.blit(M, (x, 28))
-        screen.blit(text_summ, (775, 100))
+        screen.blit(text_summ, (775, xe))
+        screen.blit(maxm_hp_gg, (293, 270))
+        screen.blit(maxm_hp_gg, (785, xe + 40))
+        x1 = 295 - len(str(now_hp_gg)) * 15
+        x2 = 785 - len(str(now_hp_en)) * 15
+        if now_hp_gg / dictionary_for_hp[N] > 0.6:
+            color_hp_gg = (127, 255, 0)
+        elif now_hp_gg / dictionary_for_hp[N] > 0.35:
+            color_hp_gg = (255, 255, 0)
+        else:
+            color_hp_gg = (255, 0, 0)
+        if now_hp_en / dictionary_for_hp[N] > 0.6:
+            color_hp_en = (127, 255, 0)
+        elif now_hp_en / dictionary_for_hp[N] > 0.35:
+            color_hp_en = (255, 255, 0)
+        else:
+            color_hp_en = (255, 0, 0)
+        screen.blit(font.render(str(now_hp_gg), True, color_hp_gg), (x1, 270))
+        screen.blit(font.render(str(now_hp_en), True, color_hp_en), (x2, xe + 40))
         manager_tp.draw_ui(screen)
         text()
         screen.blit(text_pr, (0, 519, 0, 0))
@@ -742,6 +781,7 @@ def one_player(chapter, enemy, N):
                             y = example.answer()
                             if y == int(answer) and n >= 0 and example.print_summ() >= enemy_summ:
                                 print(f'Вы наносите урон противнику! Силой {example.print_summ()}')
+                                now_hp_en -= round(example.print_summ() * 0.4)
                                 player_gif1 = pygame.transform.scale(load_img(
                                     cur.execute("""SELECT attack FROM 'primary'
                                      WHERE object = 'the main character'""").fetchall()[0][0]),
@@ -783,6 +823,7 @@ def one_player(chapter, enemy, N):
                                                               enemy_group)
                                 flag1 = True
                                 flag3 = True
+                                now_hp_gg -= round(enemy_summ * 0.4)
                                 print('Вы получаете урон')
                             n = 3
                         text_input.enable()
@@ -795,8 +836,24 @@ def one_player(chapter, enemy, N):
                         flag1 = True
                         print('Хватит пытаться сломать программу')
                         print('Вы получаете урон')
+                        now_hp_gg -= round(enemy_summ * 0.4)
                         text_input.enable()
                     example = None
+            if now_hp_gg <= 0:
+                now_hp_gg = 0
+                DEATH = True
+                player_go = AnimatedSprite(player_death, 8, 1, 235,
+                                           280, player_group)
+            if now_hp_en <= 0:
+                now_hp_en = 0
+                DEATH_en = True
+                flag3 = True
+                if enemy == 'common':
+                    enemy_go = AnimatedSprite(Enemy_death, arr[-3], 1, 650, 135,
+                                              enemy_group)
+                else:
+                    enemy_go = AnimatedSprite(Enemy_death, arr[-1], 1, 650, 80,
+                                              enemy_group)
             if event.type == pygame.MOUSEMOTION:
                 if not game_cursor1 is None:
                     xy = event.pos
@@ -809,6 +866,7 @@ def one_player(chapter, enemy, N):
             if n < 0:
                 player_go = AnimatedSprite(player_gif2, dictionary_for_atk[chapter], 1, 235, 280,
                                            player_group)
+                now_hp_gg -= round(enemy_summ * 0.4)
                 flag1 = True
                 flag = True
                 n = 3
@@ -820,15 +878,20 @@ def one_player(chapter, enemy, N):
             if player_go.end:
                 player_go = AnimatedSprite(player_gif, 6, 1, 235, 280, player_group)
                 flag1 = False
+                if DEATH:
+                    return
             n1 = 0
         if n3 % t == 0:
             enemy_group.update(flag3)
             if enemy_go.end:
                 if enemy == 'common':
                     e = arr[0]
+                    enemy_go = AnimatedSprite(Enemy, e, 1, 650, 135, enemy_group)
                 else:
                     e = arr[-2]
-                enemy_go = AnimatedSprite(Enemy, e, 1, 650, 135, enemy_group)
+                    enemy_go = AnimatedSprite(Enemy, e, 1, 650, 80, enemy_group)
+                if DEATH_en:
+                    return
                 flag3 = False
                 t = 20
             n3 = 0
