@@ -10,7 +10,6 @@ import sqlite3
 con = sqlite3.connect("data/data_for_math_duels.db")
 cur = con.cursor()
 
-
 cursor_group = pygame.sprite.Group()
 dictionary_for_color = {'chapter1': (0, 255, 0), 'chapter2': 'pink', 'chapter3': '??'}
 dictionary_for_hp = {1: 20, 2: 30, 3: 50}
@@ -150,11 +149,74 @@ def factorial(question, dict):
         return str(math.factorial(eval(np)))
 
 
+class AnimatedSprite(pygame.sprite.Sprite):
+    def __init__(self, sheet, columns, rows, x, y, group):
+        group.empty()
+        super().__init__(group)
+        self.frames = []
+        self.end = False
+        self.cut_sheet(sheet, columns, rows)
+        self.cur_frame = 0
+        self.image = self.frames[self.cur_frame]
+        self.rect = self.rect.move(x, y)
+
+    def cut_sheet(self, sheet, columns, rows):
+        self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
+                                sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_location = (self.rect.w * i, self.rect.h * j)
+                self.frames.append(sheet.subsurface(pygame.Rect(
+                    frame_location, self.rect.size)))
+
+    def update(self, flag=False):
+        if flag and self.cur_frame + 1 == len(self.frames):
+            self.end = True
+        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+        self.image = self.frames[self.cur_frame]
+
+
+def load_img(name, colorkey=None):
+    fullname = os.path.join("data", name)
+    if not os.path.isfile(fullname):
+        print("No file here :(")
+        sys.exit()
+    image = pygame.image.load(fullname)
+    if colorkey is None:
+        image = image.convert_alpha()
+    else:
+        image = image.convert()
+        if colorkey == -1:
+            colorkey = image.get_at((0, 0))
+        image.set_colorkey(colorkey)
+    return image
+
+
 pygame.init()
 pygame.display.set_caption('Math Duels')
-screen = pygame.display.set_mode((1200, 750))
 manager = pygame_gui.UIManager((1200, 750))
+screen = pygame.display.set_mode((1200, 750))
+
 screen.fill("black")
+
+all_sprites = pygame.sprite.Group()
+is_running = True
+logo = pygame.transform.scale(load_img("IDK.png"), (20000, 750))
+logo_go = AnimatedSprite(logo, 20, 1, 150, -50, all_sprites)
+clock = pygame.time.Clock()
+fps = 8
+
+for i in range(20):
+    screen.fill((0, 0, 0))
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            is_running = False
+            break
+    all_sprites.draw(screen)
+    all_sprites.update()
+    pygame.display.flip()
+    screen.fill("black")
+    clock.tick(fps)
 
 train_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((500, 215), (200, 40)),
                                              text='Обучение',
@@ -175,23 +237,6 @@ lobby_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((500, 425)
 settings_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((500, 495), (200, 40)),
                                              text='Настройки',
                                              manager=manager)
-
-
-def load_img(name, colorkey=None):
-    fullname = os.path.join("data", name)
-    if not os.path.isfile(fullname):
-        print("No file here :(")
-        sys.exit()
-    image = pygame.image.load(fullname)
-    if colorkey is None:
-        image = image.convert_alpha()
-    else:
-        image = image.convert()
-        if colorkey == -1:
-            colorkey = image.get_at((0, 0))
-        image.set_colorkey(colorkey)
-    return image
-
 
 size = width, height = 1200, 750
 FPS = 50
@@ -395,33 +440,6 @@ def story(name):
         for line in result:
             arr.append(line.strip('\n'))
     return arr
-
-
-class AnimatedSprite(pygame.sprite.Sprite):
-    def __init__(self, sheet, columns, rows, x, y, group):
-        group.empty()
-        super().__init__(group)
-        self.frames = []
-        self.end = False
-        self.cut_sheet(sheet, columns, rows)
-        self.cur_frame = 0
-        self.image = self.frames[self.cur_frame]
-        self.rect = self.rect.move(x, y)
-
-    def cut_sheet(self, sheet, columns, rows):
-        self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
-                                sheet.get_height() // rows)
-        for j in range(rows):
-            for i in range(columns):
-                frame_location = (self.rect.w * i, self.rect.h * j)
-                self.frames.append(sheet.subsurface(pygame.Rect(
-                    frame_location, self.rect.size)))
-
-    def update(self, flag=False):
-        if flag and self.cur_frame + 1 == len(self.frames):
-            self.end = True
-        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
-        self.image = self.frames[self.cur_frame]
 
 
 class Training:
@@ -694,7 +712,10 @@ class Story:
                     sys.exit()
                 if event.type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == first_ch:
-                        # Уровни для 1-й главы
+                        file = 'data/Xchase.mp3'
+                        pygame.mixer.init()
+                        pygame.mixer.music.load(file)
+                        pygame.mixer.music.play()
                         story_in_city()
                         Map('level1.txt')
                         if one_player('chapter1', 'common', 1):
@@ -705,10 +726,18 @@ class Story:
                                     Story('chapter1.txt')
                     if event.ui_element == second_ch:
                         # Уровни для 2-й главы
-                        pass
+                        file = 'data/hunt.mp3'
+                        pygame.mixer.init()
+                        pygame.mixer.music.load(file)
+                        pygame.mixer.music.play()
+
                     if event.ui_element == third_ch:
                         # Уровни для 3-й главы
-                        pass
+                        file = 'data/storm.mp3'
+                        pygame.mixer.init()
+                        pygame.mixer.music.load(file)
+                        pygame.mixer.music.play()
+
                 if event.type == pygame.MOUSEMOTION:
                     if not game_cursor1 is None:
                         xy = event.pos
@@ -717,6 +746,7 @@ class Story:
                         else:
                             cursor_group.update(xy, False)
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    pygame.mixer.music.stop()
                     return
                 manager_ch.process_events(event)
             pygame.display.flip()
@@ -1442,6 +1472,11 @@ def lobby():
     but_goose_purch = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((250, 0), (50, 50)),
                                              text='',
                                              manager=manager_lob)
+
+    default_skin = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((300, 0), (50, 50)),
+                                                text='',
+                                                manager=manager_lob)
+
     # ВАЖНО!
     but_green_skin_purch.disable()
     but_red_skin_purch.disable()
@@ -1464,6 +1499,9 @@ def lobby():
 
     goose_purch = pygame.transform.scale(load_img("photo/goose.png"), (50, 50))
     goose_s_purch = goose_purch.get_rect().move(250, -5)
+
+    default_skin_purch = pygame.transform.scale(load_img("photo/character.png"), (50, 50))
+    default_skin_purch_r = default_skin_purch.get_rect().move(300, 0)
     # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ###############################################################################################
 
@@ -1530,6 +1568,7 @@ def lobby():
         screen.blit(green_skin_purch, green_skins_purch)
         screen.blit(hood_skin_purch, hood_skins_purch)
         screen.blit(goose_purch, goose_s_purch)
+        screen.blit(default_skin_purch, default_skin_purch_r)
         ################################################
 
         screen.blit(label_red, label_rect_red)
