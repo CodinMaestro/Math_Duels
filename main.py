@@ -50,9 +50,8 @@ class Math_question:
         if len(symbols) > 0:
             if not None in symbols:
                 self.question = ''.join(symbols)
-                if '0/' not in self.question and '*0' not in self.question \
-                        and '/0' not in self.question and '0*' not in self.question\
-                        and len(self.numbers) > 0:
+                if '*0' not in self.question or '**0' in self.question\
+                        and '/0' not in self.question and len(self.numbers) > 0:
                     return True
                 else:
                     return False
@@ -74,10 +73,13 @@ class Math_question:
                     if s[i] in self.operations:
                         self.operations['**'] += 1
                 elif s[i] in '+-/*':
-                    self.question = self.question + pr + s[i] + pr
-                    self.sym.append(s[i])
-                    if s[i] in self.operations:
-                        self.operations[s[i]] += 1
+                    if s[i - 1] == '*' and s[i] == '*':
+                        pass
+                    else:
+                        self.question = self.question + pr + s[i] + pr
+                        self.sym.append(s[i])
+                        if s[i] in self.operations:
+                            self.operations[s[i]] += 1
                 elif s[i] == '!':
                     self.sym.append(s[i])
                     self.question = self.question[:-1] + s[i]
@@ -138,14 +140,14 @@ def root(question, dict):
     p = Math_question(question, dict)
     np = p.transformation()
     if p.checking_for_correctness():
-        return str(round(math.sqrt(eval(np))))
+        return str(math.sqrt(eval(np)))
 
 
 def factorial(question, dict):
     p = Math_question(question, dict)
     np = p.transformation()
     if p.checking_for_correctness():
-        return str(round(math.factorial(eval(np))))
+        return str(math.factorial(eval(np)))
 
 
 pygame.init()
@@ -314,6 +316,11 @@ player = None
 
 class Map:
     def __init__(self, level):
+        all_sprites_map.empty()
+        tile_group_map.empty()
+        player_group_map.empty()
+        box_group_map.empty()
+        duels_map.empty()
         running = True
         flag = True
         player, level_x, level_y = generate_level(load_level(level))
@@ -367,14 +374,13 @@ class Map:
                 return
 
 
-def draw(i, y, arr):
-    height, width = 750, 1200
+def draw(i, y, arr, height=750, width=1200, color='white', x=22, n=20):
     text_coord = height
-    font = pygame.font.Font("data/F77.ttf", 22)
+    font = pygame.font.Font("data/F77.ttf", x)
     for line in arr:
-        string_rendered = font.render(line, 1, pygame.Color('white'))
+        string_rendered = font.render(line, 1, pygame.Color(color))
         intro_rect = string_rendered.get_rect()
-        text_coord += 20
+        text_coord += n
         intro_rect.top = text_coord - y * i
         intro_rect.x = width // 2 - intro_rect.width // 2
         text_coord += intro_rect.height
@@ -445,18 +451,30 @@ class Training:
         self.but_opponent_ans = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((1100, 700),
                                                                                        (100, 50)),
                                                              text='Ответ', manager=self.manager_tr)
+        self.vetoris = pygame.transform.scale(load_img("story in the city/vetoris.png"), (180, 180))
+        self.vetoris_1 = self.vetoris.get_rect().move(1060, 320)
+        self.parchment = pygame.transform.scale(load_img("story in the city/parchment.png"),
+                                                (750, 250))
+        x = 1060
+        self.parchment_1 = self.vetoris.get_rect().move(x, 270)
 
         self.but_opponent_ans.disable()
         self.text()
         self.text_input2 = UITextEntryLine(relative_rect=Rect(1100, 650, 100, 50),
                                            manager=self.manager_tr, placeholder_text="3")
         self.text_input2.disable()
-
+        self.arr = story('rules.txt')
+        self.s = self.arr[:5]
+        flag = False
         while True:
             screen.fill((0, 0, 0))
-            self.manager_tr.draw_ui(screen)
             screen.blit(self.location, self.location.get_rect())
+            screen.blit(self.parchment, self.parchment_1)
+            screen.blit(self.vetoris, self.vetoris_1)
+            self.manager_tr.draw_ui(screen)
             self.text()
+            if flag:
+                draw(100, 0, self.s, 322, 1620, 'black', 12, 8)
             cursor_group.draw(screen)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -464,6 +482,8 @@ class Training:
                     sys.exit()
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
                     self.tm += 1
+                    if self.tm == 13:
+                        return
                     self.training_move()
                 if event.type == pygame.MOUSEMOTION:
                     if not game_cursor1 is None:
@@ -485,7 +505,11 @@ class Training:
             if self.tm == 4:
                 screen.blit(self.location, self.location.get_rect())
                 self.arrow1 = arrow.get_rect().move(1100, 550)
+                screen.blit(self.parchment, self.parchment_1)
+                screen.blit(self.vetoris, self.vetoris_1)
                 screen.blit(arrow, self.arrow1)
+                if flag:
+                    draw(100, 0, self.s, 322, 1620, 'black', 12, 8)
             if self.tm == 5:
                 screen.fill('black', (1100, 598, 100, 50))
                 self.text_input2.enable()
@@ -496,22 +520,44 @@ class Training:
                 screen.fill('black', (1100, 598, 100, 53))
                 self.text()
             pygame.display.flip()
+            if x > 450:
+                x -= 2
+                self.parchment_1 = self.vetoris.get_rect().move(x, 270)
+            else:
+                flag = True
             self.manager_tr.update(fps)
             clock.tick(fps)
 
     def training_move(self):
         if self.tm == 1:
             self.text_input.enable()
+            self.s = self.arr[5:12]
         if self.tm == 2:
             self.but_sqrt.enable()
+            self.s = self.arr[12:14]
         if self.tm == 3:
             self.but_ready.enable()
+            self.s = self.arr[14:17]
         if self.tm == 4:
             self.text_input2.enable()
+            self.s = self.arr[17:20]
         if self.tm == 5:
             self.but_opponent_ans.enable()
+            self.s = self.arr[20:24]
         if self.tm == 6:
-            print("Congratulations!")
+            self.s = self.arr[24:29]
+        if self.tm == 7:
+            self.s = self.arr[30:37]
+        if self.tm == 8:
+            self.s = self.arr[37:43]
+        if self.tm == 9:
+            self.s = self.arr[42:49]
+        if self.tm == 10:
+            self.s = self.arr[49:55]
+        if self.tm == 11:
+            self.s = self.arr[56:64]
+        if self.tm == 12:
+            self.s = self.arr[65:]
 
     def text(self):
         rules = ["Ответ", "", "на пример"]
@@ -525,6 +571,74 @@ class Training:
             linerect.x = 1100
             text_coord += linerect.height
             screen.blit(rendered, linerect)
+
+
+def story_in_city():
+    player_group_city = pygame.sprite.Group()
+    pygame.display.set_caption('Story')
+    screen.fill((0, 0, 0))
+    manager_st = pygame_gui.UIManager((1200, 750))
+    town = pygame.transform.scale(load_img("story in the city/town.jpg"), (1200, 750))
+    player_gif = pygame.transform.scale(load_img(cur.execute("""SELECT photo_gif_inaction
+         FROM 'primary' WHERE object = 'the main character'""").fetchall()[0][0]), (720, 150))
+    player_go = AnimatedSprite(player_gif, 6, 1, 400, 400, player_group_city)
+    vetoris = pygame.transform.scale(load_img("story in the city/vetoris.png"), (130, 130))
+    vetoris_1 = vetoris.get_rect().move(540, 367)
+    vetoris2 = pygame.transform.scale(load_img("story in the city/vetoris.png"), (180, 180))
+    parchment = pygame.transform.scale(load_img("story in the city/parchment.png"), (750, 250))
+    x = 1060
+    x1 = 1680
+    parchment_1 = parchment.get_rect().move(x, 520)
+    vetoris_2 = vetoris2.get_rect().move(x1, 570)
+    town_1 = town.get_rect().move(0, 0)
+    n1 = 0
+    flag = False
+    w = 1
+    arr = story('town.txt')
+    s = arr[:8]
+    while True:
+        screen.fill((0, 0, 0))
+        screen.blit(town, town_1)
+        player_group_city.draw(screen)
+        screen.blit(parchment, parchment_1)
+        screen.blit(vetoris, vetoris_1)
+        screen.blit(vetoris2, vetoris_2)
+        if flag:
+            draw(100, 0, s, 576, 1620, 'black', 12, 8)
+        cursor_group.draw(screen)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                w += 1
+                s = arr[7:]
+                if w >= 3:
+                    return
+            if event.type == pygame.MOUSEMOTION:
+                if not game_cursor1 is None:
+                    xy = event.pos
+                    if pygame.mouse.get_focused():
+                        cursor_group.update(xy)
+                    else:
+                        cursor_group.update(xy, False)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                return
+            manager_st.process_events(event)
+        n1 += 1
+        if n1 % 8 == 0:
+            player_group_city.update()
+            n1 = 0
+        if x > 450:
+            x -= 4
+            parchment_1 = parchment.get_rect().move(x, 520)
+        else:
+            flag = True
+        if x1 > 1060:
+            x1 -= 4
+            vetoris_2 = vetoris2.get_rect().move(x1, 570)
+        clock.tick(30)
+        pygame.display.flip()
 
 
 class Story:
@@ -557,8 +671,10 @@ class Story:
         manager_ch = pygame_gui.UIManager((1200, 750))
 
         first_ch = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((0, 0), (400, 750)),
-                                                text='<mega_image>',
+                                                text='',
                                                 manager=manager_ch)
+        chapter_1 = pygame.transform.scale(load_img("chapter1.jpg"), (400, 750))
+        chapter__1 = chapter_1.get_rect().move(0, 0)
         second_ch = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((400, 0), (400, 750)),
                                                 text='<mega_image_2>',
                                                 manager=manager_ch)
@@ -570,6 +686,7 @@ class Story:
         while True:
             screen.fill((0, 0, 0))
             manager_ch.draw_ui(screen)
+            screen.blit(chapter_1, chapter__1)
             cursor_group.draw(screen)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -578,8 +695,14 @@ class Story:
                 if event.type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == first_ch:
                         # Уровни для 1-й главы
-                        #Map('level1.txt')
-                        one_player('chapter1', 'common', 1)
+                        story_in_city()
+                        Map('level1.txt')
+                        if one_player('chapter1', 'common', 1):
+                            Map('level2.txt')
+                            if one_player('chapter1', 'common', 2):
+                                Map('level3.txt')
+                                if one_player('chapter1', 'boss', 3):
+                                    Story('chapter1.txt')
                     if event.ui_element == second_ch:
                         # Уровни для 2-й главы
                         pass
@@ -699,7 +822,7 @@ def one_player(chapter, enemy, N):
         screen.blit(M, (x, 28))
         screen.blit(text_summ, (775, xe))
         screen.blit(maxm_hp_gg, (293, 270))
-        screen.blit(maxm_hp_gg, (785, xe + 40))
+        screen.blit(maxm_hp_en, (785, xe + 40))
         x1 = 295 - len(str(now_hp_gg)) * 15
         x2 = 785 - len(str(now_hp_en)) * 15
         if now_hp_gg / dictionary_for_hp[N] > 0.6:
@@ -745,7 +868,6 @@ def one_player(chapter, enemy, N):
                         corr = example.checking_for_correctness()
                     except Exception:
                         question = f'Соблюдайте правила! Количество попыток: {n}'
-                        flag = False
                         corr = False
                         n -= 1
                     if corr:
@@ -813,6 +935,11 @@ def one_player(chapter, enemy, N):
                                         t = 20
                                         enemy_go = AnimatedSprite(Enemy_d, arr[1], 1, 650, 135,
                                                                   enemy_group)
+                                enemy_summ = dictionary_for_summ[N]
+                                enemy_summ = enemy_summ[0] + random.randrange(enemy_summ[1],
+                                                                              enemy_summ[2])
+                                text_summ = font_for_money.render(str(enemy_summ), True,
+                                                                  dictionary_for_color[chapter])
                             else:
                                 print(example.print_summ())
                                 player_go = AnimatedSprite(player_gif2, dictionary_for_atk[chapter],
@@ -825,6 +952,11 @@ def one_player(chapter, enemy, N):
                                 flag3 = True
                                 now_hp_gg -= round(enemy_summ * 0.4)
                                 print('Вы получаете урон')
+                                enemy_summ = dictionary_for_summ[N]
+                                enemy_summ = enemy_summ[0] + random.randrange(enemy_summ[1],
+                                                                              enemy_summ[2])
+                                text_summ = font_for_money.render(str(enemy_summ), True,
+                                                                  dictionary_for_color[chapter])
                             n = 3
                         text_input.enable()
                         flag = True
@@ -879,7 +1011,7 @@ def one_player(chapter, enemy, N):
                 player_go = AnimatedSprite(player_gif, 6, 1, 235, 280, player_group)
                 flag1 = False
                 if DEATH:
-                    return
+                    return False
             n1 = 0
         if n3 % t == 0:
             enemy_group.update(flag3)
@@ -891,7 +1023,7 @@ def one_player(chapter, enemy, N):
                     e = arr[-2]
                     enemy_go = AnimatedSprite(Enemy, e, 1, 650, 80, enemy_group)
                 if DEATH_en:
-                    return
+                    return True
                 flag3 = False
                 t = 20
             n3 = 0
@@ -968,6 +1100,20 @@ def two_players():
     font_for_money = pygame.font.Font("data/F77.ttf", 20)
     question = ''
     text_pr = font.render(question, True, "white")
+    maxm_hp_gg1 = '/' + '50'
+    maxm_hp_gg2 = '/' + '50'
+    now_hp_gg1 = 50
+    now_hp_gg2 = 50
+    DEATH_gg1 = False
+    DEATH_gg2 = False
+    end = False
+    maxm_hp_gg1 = font.render(maxm_hp_gg1, True, (127, 255, 0))
+    maxm_hp_gg2 = font.render(maxm_hp_gg2, True, (127, 255, 0))
+    player_death_gg1 = pygame.transform.scale(load_img(cur.execute("""SELECT death
+             FROM 'primary' WHERE object = 'the main character'""").fetchall()[0][0]), (960, 150))
+    player_death_gg2 = pygame.transform.scale(load_img(cur.execute("""SELECT death
+             FROM 'primary' WHERE object = 'red suit'""").fetchall()[0][0]), (960, 150))
+    player_death_gg2 = pygame.transform.flip(player_death_gg2, True, False)
     flag = True
     white = False
     example = None
@@ -976,8 +1122,6 @@ def two_players():
     flag1 = False
     flag2 = False
     money = pygame.transform.scale(load_img("money.png"), (35, 35))
-    summ_1 = font_for_money.render(str(sum1), True, (255, 255, 255))
-    summ_2 = font_for_money.render(str(sum2), True, (255, 0, 0))
     help = ''
     while True:
         summ_1 = font_for_money.render(str(sum1), True, (255, 255, 255))
@@ -994,6 +1138,24 @@ def two_players():
         screen.blit(summ_1, (285, 240))
         screen.blit(summ_2, (785, 210))
         screen.blit(M, (x, 28))
+        screen.blit(maxm_hp_gg1, (293, 270))
+        screen.blit(maxm_hp_gg2, (790, 235))
+        x1 = 295 - len(str(now_hp_gg1)) * 15
+        x2 = 790 - len(str(now_hp_gg2)) * 15
+        if now_hp_gg1 / 50 > 0.6:
+            color_hp_gg1 = (127, 255, 0)
+        elif now_hp_gg1 / 50 > 0.35:
+            color_hp_gg1 = (255, 255, 0)
+        else:
+            color_hp_gg1 = (255, 0, 0)
+        if now_hp_gg2 / 50 > 0.6:
+            color_hp_gg2 = (127, 255, 0)
+        elif now_hp_gg2 / 50 > 0.35:
+            color_hp_gg2 = (255, 255, 0)
+        else:
+            color_hp_gg2 = (255, 0, 0)
+        screen.blit(font.render(str(now_hp_gg1), True, color_hp_gg1), (x1, 270))
+        screen.blit(font.render(str(now_hp_gg2), True, color_hp_gg2), (x2, 235))
         manager_tp.draw_ui(screen)
         text()
         screen.blit(text_pr, (0, 519, 0, 0))
@@ -1028,7 +1190,6 @@ def two_players():
                         corr = example.checking_for_correctness()
                     except Exception:
                         question = f'Соблюдайте правила! Количество попыток: {n}'
-                        flag = False
                         corr = False
                         n -= 1
                     if corr:
@@ -1079,6 +1240,9 @@ def two_players():
                                         people = 1
                                         if sum1 != sum2:
                                             two_people_made_a_move = True
+                                        else:
+                                            sum1 = ''
+                                            sum2 = ''
                                 else:
                                     if people == 1:
                                         sum1 = 0
@@ -1139,14 +1303,29 @@ def two_players():
         n1 += 1
         n3 += 1
         if n1 % 8 == 0:
-            player_group.update(flag1)
-            player_group_02.update(flag2)
+            if end is False:
+                player_group.update(flag1)
+                player_group_02.update(flag2)
             if player_go.end:
-                player_go = AnimatedSprite(player_gif, 6, 1, 235, 280, player_group)
-                flag1 = False
+                if not DEATH_gg1:
+                    player_go = AnimatedSprite(player_gif, 6, 1, 235, 280, player_group)
+                    flag1 = False
+                else:
+                    text_input.set_text('Победа второго игрока!!')
+                    but_opponent_ans.disable()
+                    but_ready.disable()
+                    but_sqrt.disable()
+                    end = True
             if player_go_2.end:
-                player_go_2 = AnimatedSprite(player_gif_2, 6, 1, 730, 250, player_group_02)
-                flag2 = False
+                if not DEATH_gg2:
+                    player_go_2 = AnimatedSprite(player_gif_2, 6, 1, 730, 250, player_group_02)
+                    flag2 = False
+                else:
+                    text_input.set_text('Победа первого игрока!!')
+                    but_opponent_ans.disable()
+                    but_ready.disable()
+                    but_sqrt.disable()
+                    end = True
             n1 = 0
         if two_people_made_a_move:
             flag = False
@@ -1158,12 +1337,14 @@ def two_players():
                 question = expl_2
                 text_input.set_text('Игрок первый, чтобы снизить урон, который вы получите,'
                                     ' решите пример противника')
+        sum11 = sum1
+        sum22 = sum2
         if help != '':
             two_people_made_a_move = False
             if sum1 > sum2 and help:
-                sum1 *= 0.5
+                sum11 *= 0.5
             elif sum2 > sum1 and help:
-                sum2 *= 0.5
+                sum22 *= 0.5
             help = ''
             flag1 = True
             flag2 = True
@@ -1172,7 +1353,6 @@ def two_players():
                 example2.transformation()
                 example2.checking_for_correctness()
                 par = example2.attack()
-                print(par)
                 if par[0] == '√' and par[1] > 2:
                     player_go_2 = AnimatedSprite(player_02_roots, 18, 1, 730, 250, player_group_02)
                 elif par[0] == '!' and par[1] > 2:
@@ -1181,13 +1361,12 @@ def two_players():
                     cur.execute("""SELECT attack FROM 'primary' 
                     WHERE object = 'the main character'""").fetchall()[0][0]), (840, 150))
                 player_go = AnimatedSprite(player_gif1, 7, 1, 235, 280, player_group)
-                print(f'Первый противника наносит урон {sum1}')
+                now_hp_gg2 -= round(sum11 * 0.4)
             else:
                 example2 = Math_question(expl_2)
                 example2.transformation()
                 example2.checking_for_correctness()
                 par = example2.attack()
-                print(par)
                 if par[0] == '√' and par[1] > 2:
                     player_go = AnimatedSprite(player_01_roots, 18, 1, 235, 280, player_group)
                 elif par[0] == '!' and par[1] > 2:
@@ -1197,9 +1376,19 @@ def two_players():
                                     WHERE object = 'red suit'""").fetchall()[0][0]), (840, 150))
                 player_gif_02_atk = pygame.transform.flip(player_gif_02_atk, True, False)
                 player_go_2 = AnimatedSprite(player_gif_02_atk, 7, 1, 730, 250, player_group_02)
-                print(f'Второй противника наносит урон {sum2}')
+                now_hp_gg1 -= round(sum22 * 0.4)
+            if now_hp_gg1 <= 0:
+                now_hp_gg1 = 0
+                DEATH_gg1 = True
+                player_go = AnimatedSprite(player_death_gg1, 8, 1, 235,
+                                           280, player_group)
+            if now_hp_gg2 <= 0:
+                now_hp_gg2 = 0
+                DEATH_gg2 = True
+                player_go_2 = AnimatedSprite(player_death_gg2, 8, 1, 730, 250, player_group_02)
             sum1 = ''
             sum2 = ''
+            help = ''
             flag = True
             text_input.clear()
         pygame.display.flip()
