@@ -14,8 +14,9 @@ cursor_group = pygame.sprite.Group()
 dictionary_for_color = {'chapter1': (0, 255, 0), 'chapter2': 'pink', 'chapter3': '??'}
 dictionary_for_hp = {1: 20, 2: 30, 3: 50}
 dictionary_for_summ = {1: (7, 5, 10), 2: (11, 5, 10), 3: (15, 10, 15)}
-dictionary_for_cul = {'chapter1': [7, 5, 34, 5, 1, 7, 7, 8], 'chapter2': 'pink', 'chapter3': '??'}
-dictionary_for_atk = {'chapter1': 18, 'chapter2': 9, 'chapter3': '??'}
+dictionary_for_cul = {'chapter1': [7, 5, 34, 5, 7, 7, 7, 8], 'chapter2': [8, 6, 18, 18, 18, 6, 4, 5],
+                      'chapter3': '??'}
+dictionary_for_atk = {'chapter1': 18, 'chapter2': 9, 'chapter3': 15}
 
 
 class Math_question:
@@ -177,8 +178,9 @@ class AnimatedSprite(pygame.sprite.Sprite):
 
 
 def load_img(name, colorkey=None):
-    fullname = os.path.join("data", name)
+    fullname = 'data/' + name
     if not os.path.isfile(fullname):
+        print(fullname)
         print("No file here :(")
         sys.exit()
     image = pygame.image.load(fullname)
@@ -251,6 +253,7 @@ tiles_images = {
             'empty': load_img('chapter1/m22.png'),
             'empty2': load_img('chapter1/m33.png'),
             'shadow': load_img('chapter1/shadow.png'),
+            'crystal': load_img('chapter1/crystal.png'),
             'place_for_a_duel': load_img('chapter1/MD.png')}
 tile_width = tile_height = 100
 
@@ -271,7 +274,7 @@ def load_level(filename):
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tile_group_map, all_sprites_map)
-        if tile_type == 'tree' or tile_type == 'dark_tree':
+        if tile_type == 'tree' or tile_type == 'dark_tree' or tile_type == 'crystal':
             self.add(box_group_map)
         elif tile_type == 'place_for_a_duel':
             self.add(duels_map)
@@ -292,6 +295,9 @@ def generate_level(level):
                 Tile('shadow', x, y)
                 tree = random.choice(('tree', 'dark_tree'))
                 Tile(tree, x, y)
+            elif level[y][x] == '|':
+                Tile('empty2', x, y)
+                Tile('crystal', x, y)
             elif level[y][x] == '@':
                 if level[y][x + 1] == '.':
                     ch = 'empty'
@@ -300,9 +306,17 @@ def generate_level(level):
                 else:
                     ch = 'empty3'
                 Tile(ch, x, y)
-                new_player = Player(load_img("photo/character_go1.png"), 4, 1, x, y)
+                pl = cur.execute("""SELECT photo_gif FROM 'primary'
+                 WHERE object = 'the main character'""").fetchall()[0][0]
+                new_player = Player(load_img(pl), 4, 1, x, y)
             elif level[y][x] == 'M':
-                Tile('empty', x, y)
+                if level[y][x + 1] == '.':
+                    ch = 'empty'
+                elif level[y][x + 1] == ',':
+                    ch = 'empty2'
+                else:
+                    ch = 'empty3'
+                Tile(ch, x, y)
                 Tile('place_for_a_duel', x, y)
     return new_player, x, y
 
@@ -673,7 +687,10 @@ class Story:
                     pygame.quit()
                     sys.exit()
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
-                    self.chapters()
+                    if name == 'chapter3.txt':
+                        Story('titles.txt')
+                    else:
+                        self.chapters()
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     return
                 manager_st.process_events(event)
@@ -694,8 +711,10 @@ class Story:
         chapter_1 = pygame.transform.scale(load_img("chapter1.jpg"), (400, 750))
         chapter__1 = chapter_1.get_rect().move(0, 0)
         second_ch = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((400, 0), (400, 750)),
-                                                text='<mega_image_2>',
+                                                text='',
                                                 manager=manager_ch)
+        chapter_2 = pygame.transform.scale(load_img("chapter2.jpg"), (400, 750))
+        chapter__2 = chapter_1.get_rect().move(400, 0)
 
         third_ch = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((800, 0), (400, 750)),
                                                 text='<mega_image_3>',
@@ -705,6 +724,7 @@ class Story:
             screen.fill((0, 0, 0))
             manager_ch.draw_ui(screen)
             screen.blit(chapter_1, chapter__1)
+            screen.blit(chapter_2, chapter__2)
             cursor_group.draw(screen)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -712,10 +732,10 @@ class Story:
                     sys.exit()
                 if event.type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == first_ch:
-                        file = 'data/Xchase.mp3'
-                        pygame.mixer.init()
-                        pygame.mixer.music.load(file)
-                        pygame.mixer.music.play()
+                        file = "data/Xchase.mp3"
+                        #pygame.mixer.init()
+                        #pygame.mixer.music.load(file)
+                        #pygame.mixer.music.play()
                         story_in_city()
                         Map('level1.txt')
                         if one_player('chapter1', 'common', 1):
@@ -726,17 +746,26 @@ class Story:
                                     Story('chapter1.txt')
                     if event.ui_element == second_ch:
                         # Уровни для 2-й главы
-                        file = 'data/hunt.mp3'
-                        pygame.mixer.init()
-                        pygame.mixer.music.load(file)
-                        pygame.mixer.music.play()
+                        # file = 'data/hunt.mp3'
+                        # pygame.mixer.init()
+                        # pygame.mixer.music.load(file)
+                        # pygame.mixer.music.play()
+                        Map('level4.txt')
+                        if one_player('chapter2', 'common', 1):
+                            Map('level5.txt')
+                            if one_player('chapter2', 'common', 2):
+                                Map('level6.txt')
+                                if one_player('chapter2', 'boss', 3):
+                                    Story('chapter2.txt')
 
                     if event.ui_element == third_ch:
                         # Уровни для 3-й главы
-                        file = 'data/storm.mp3'
-                        pygame.mixer.init()
-                        pygame.mixer.music.load(file)
-                        pygame.mixer.music.play()
+                        #file = 'data/storm.mp3'
+                        #pygame.mixer.init()
+                        #pygame.mixer.music.load(file)
+                        #pygame.mixer.music.play()
+                        if one_player('chapter3', 'boss', 3):
+                            Story('chapter3.txt')
 
                 if event.type == pygame.MOUSEMOTION:
                     if not game_cursor1 is None:
@@ -750,7 +779,6 @@ class Story:
                     return
                 manager_ch.process_events(event)
             pygame.display.flip()
-
             manager_ch.update(fps)
             clock.tick(fps)
 
@@ -815,6 +843,7 @@ def one_player(chapter, enemy, N):
     Enemy_d = pygame.transform.scale(load_img(chapter + '/damage' + '.png'), (1500, 300))
     roots = pygame.transform.scale(load_img(chapter + '/roots' + '.png'), (10200, 300))
     noise = pygame.transform.scale(load_img(chapter + '/noise' + '.png'), (1500, 300))
+    degree = pygame.transform.scale(load_img(chapter + '/degree' + '.png'), (2100, 300))
     text_input2 = UITextEntryLine(relative_rect=Rect(1100, 650, 100, 50), manager=manager_tp)
     maxm_hp_gg = '/' + str(dictionary_for_hp[N])
     maxm_hp_en = '/' + str(dictionary_for_hp[N])
@@ -828,6 +857,7 @@ def one_player(chapter, enemy, N):
     white = False
     example = None
     n = 3
+    first = True
     n1 = 0
     flag1 = False
     t = 20
@@ -874,6 +904,7 @@ def one_player(chapter, enemy, N):
         screen.blit(text_pr, (0, 519, 0, 0))
         player_group.draw(screen)
         enemy_group.draw(screen)
+        goose_group.draw(screen)
         cursor_group.draw(screen)
         for event in pygame.event.get():
             if text_input.get_text() != question and flag:
@@ -932,7 +963,6 @@ def one_player(chapter, enemy, N):
                                 answer = int(answer[1::]) * -1
                             y = example.answer()
                             if y == int(answer) and n >= 0 and example.print_summ() >= enemy_summ:
-                                print(f'Вы наносите урон противнику! Силой {example.print_summ()}')
                                 now_hp_en -= round(example.print_summ() * 0.4)
                                 player_gif1 = pygame.transform.scale(load_img(
                                     cur.execute("""SELECT attack FROM 'primary'
@@ -960,7 +990,8 @@ def one_player(chapter, enemy, N):
                                         enemy_go = AnimatedSprite(noise, arr[3], 1, 650, 135,
                                                                   enemy_group)
                                     elif cor[1] >= 3 and cor[0] == '**':
-                                        pass
+                                        enemy_go = AnimatedSprite(degree, arr[4], 1, 650, 135,
+                                                                  enemy_group)
                                     else:
                                         t = 20
                                         enemy_go = AnimatedSprite(Enemy_d, arr[1], 1, 650, 135,
@@ -1006,11 +1037,13 @@ def one_player(chapter, enemy, N):
                 DEATH = True
                 player_go = AnimatedSprite(player_death, 8, 1, 235,
                                            280, player_group)
-            if now_hp_en <= 0:
+            if now_hp_en <= 0 and first:
                 now_hp_en = 0
                 DEATH_en = True
+                first = False
                 flag3 = True
                 if enemy == 'common':
+                    print(arr[-3])
                     enemy_go = AnimatedSprite(Enemy_death, arr[-3], 1, 650, 135,
                                               enemy_group)
                 else:
@@ -1036,6 +1069,7 @@ def one_player(chapter, enemy, N):
         n1 += 1
         n3 += 1
         if n1 % 8 == 0:
+            goose_group.update()
             player_group.update(flag1)
             if player_go.end:
                 player_go = AnimatedSprite(player_gif, 6, 1, 235, 280, player_group)
@@ -1071,6 +1105,11 @@ def two_players():
     n3 = 0
     player_01_roots = pygame.transform.scale(load_img(cur.execute(f"""SELECT chapter1 FROM 'primary' 
     WHERE object = 'the main character'""").fetchall()[0][0]), (2160, 150))
+    player_01_degree = pygame.transform.scale(load_img(cur.execute(f"""SELECT chapter3 FROM 'primary' 
+        WHERE object = 'the main character'""").fetchall()[0][0]), (1800, 150))
+    player_02_degree = pygame.transform.scale(load_img(cur.execute(f"""SELECT chapter3 FROM 'primary' 
+            WHERE object = 'red suit'""").fetchall()[0][0]), (1800, 150))
+    player_02_degree = pygame.transform.flip(player_02_degree, True, False)
     player_02_roots = pygame.transform.scale(load_img(cur.execute(f"""SELECT chapter1 FROM 'primary' 
         WHERE object = 'red suit'""").fetchall()[0][0]), (2160, 150))
     player_02_roots = pygame.transform.flip(player_02_roots, True, False)
@@ -1387,6 +1426,8 @@ def two_players():
                     player_go_2 = AnimatedSprite(player_02_roots, 18, 1, 730, 250, player_group_02)
                 elif par[0] == '!' and par[1] > 2:
                     player_go_2 = AnimatedSprite(player_02_sounds, 9, 1, 730, 250, player_group_02)
+                elif par[0] == '**' and par[1] > 2:
+                    player_go_2 = AnimatedSprite(player_02_degree, 15, 1, 730, 250, player_group_02)
                 player_gif1 = pygame.transform.scale(load_img(
                     cur.execute("""SELECT attack FROM 'primary' 
                     WHERE object = 'the main character'""").fetchall()[0][0]), (840, 150))
@@ -1401,6 +1442,8 @@ def two_players():
                     player_go = AnimatedSprite(player_01_roots, 18, 1, 235, 280, player_group)
                 elif par[0] == '!' and par[1] > 2:
                     player_go = AnimatedSprite(player_01_sounds, 9, 1, 235, 280, player_group)
+                elif par[0] == '**' and par[1] > 2:
+                    player_go = AnimatedSprite(player_01_degree, 15, 1, 730, 250, player_group_02)
                 player_gif_02_atk = pygame.transform.scale(load_img(
                     cur.execute("""SELECT attack FROM 'primary' 
                                     WHERE object = 'red suit'""").fetchall()[0][0]), (840, 150))
@@ -1477,14 +1520,12 @@ def lobby():
                                                 text='',
                                                 manager=manager_lob)
 
-    # ВАЖНО!
     but_green_skin_purch.disable()
     but_red_skin_purch.disable()
     but_hood_skin_purch.disable()
     but_blue_skin_purch.disable()
     but_goose_purch.disable()
 
-    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     red_skin_purch = pygame.transform.scale(load_img("photo/R_character.png"), (50, 50))
     red_skins_purch = red_skin_purch.get_rect().move(10, 0)
 
@@ -1502,8 +1543,6 @@ def lobby():
 
     default_skin_purch = pygame.transform.scale(load_img("photo/character.png"), (50, 50))
     default_skin_purch_r = default_skin_purch.get_rect().move(300, 0)
-    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ###############################################################################################
 
     label_red = font_renderer.render(f"20", True, "white")
     label_rect_red = label_red.get_rect()
@@ -1542,7 +1581,12 @@ def lobby():
 
     goose = pygame.transform.scale(load_img("photo/goose.png"), (128, 160))
     goose_s = goose.get_rect().move(833, 590)
-
+    goose1 = None
+    s = ''
+    x = 150
+    y = 350
+    gg = None
+    su = 'dark blue suit'
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -1550,26 +1594,143 @@ def lobby():
                 sys.exit()
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 return
-            '''Проверка на двойное нажатие для совершения покупки
-            if event.type == pygame.KEYDOWN and event.key == pygame.MOUSEBUTTONDOWN:
-                purchased = True'''
+            if event.type == pygame.MOUSEMOTION:
+                if not game_cursor1 is None:
+                    xy = event.pos
+                    if pygame.mouse.get_focused():
+                        cursor_group.update(xy)
+                    else:
+                        cursor_group.update(xy, False)
+            if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                now = cur.execute("""SELECT quantity_of_coins FROM 'primary' 
+                WHERE object = 'the main character'""").fetchall()[0][0]
+                if event.ui_element == but_red_skin and now >= 20:
+                    print('!!')
+                    x = now - 20
+                    s = 'red suit'
+                if event.ui_element == but_blue_skin and now >= 40:
+                    x = now - 40
+                    s = 'blue suit'
+                if event.ui_element == but_green_skin and now >= 60:
+                    x = now - 60
+                    s = 'green suit'
+                if event.ui_element == but_hood_skin and now >= 100:
+                    x = now - 100
+                    s = 'new years suit'
+                if event.ui_element == but_goose and now >= 150:
+                    x = now - 150
+                    s = 'companion'
+                queue = f"UPDATE 'primary' SET quantity_of_coins = {x}" \
+                        f" WHERE object = 'the main character'"
+                cur.execute(queue)
+                con.commit()
+                if s != '':
+                    queue = f"UPDATE 'primary' SET access = 'True'" \
+                            f" WHERE object = '{s}'"
+                    cur.execute(queue)
+                    con.commit()
+                if event.ui_element == but_goose_purch:
+                    goose1 = pygame.transform.scale(load_img("photo/goose.png"), (128, 160))
+                    goose2 = pygame.transform.scale(load_img("photo/moving_goose.png"), (438, 64))
+                    goose_s1 = goose1.get_rect().move(140, 500)
+                    g = AnimatedSprite(goose2, 7, 1, 200, 350, goose_group)
+                if event.ui_element == but_red_skin_purch:
+                    su = 'red suit'
+                    gg = pygame.transform.scale(load_img("photo/R_character.png"), (192, 240))
+                    gg1 = gg.get_rect().move(200, 400)
+                if event.ui_element == but_blue_skin_purch:
+                    su = 'blue suit'
+                    gg = pygame.transform.scale(load_img("photo/B_character.png"), (192, 240))
+                    gg1 = gg.get_rect().move(200, 400)
+                if event.ui_element == default_skin:
+                    su = 'dark blue suit'
+                    gg = pygame.transform.scale(load_img("photo/character.png"), (192, 240))
+                    gg1 = gg.get_rect().move(200, 400)
+                if event.ui_element == but_green_skin_purch:
+                    su = 'green suit'
+                    gg = pygame.transform.scale(load_img("photo/G_character.png"), (192, 240))
+                    gg1 = gg.get_rect().move(200, 400)
+                if event.ui_element == but_hood_skin_purch:
+                    su = 'new years suit'
+                    gg = pygame.transform.scale(load_img("photo/NY_character.png"), (192, 240))
+                    gg1 = gg.get_rect().move(200, 400)
+                arr = cur.execute(f"""SELECT * FROM 'primary' 
+                                WHERE object = '{su}'""").fetchall()[0]
+                queue = f"UPDATE 'primary' SET photo_gif = '{arr[2]}'" \
+                        f" WHERE object = 'the main character'"
+                cur.execute(queue)
+                con.commit()
+                queue = f"UPDATE 'primary' SET photo_gif_inaction = '{arr[3]}'" \
+                        f" WHERE object = 'the main character'"
+                cur.execute(queue)
+                con.commit()
+                queue = f"UPDATE 'primary' SET chapter1 = '{arr[4]}'" \
+                        f" WHERE object = 'the main character'"
+                cur.execute(queue)
+                con.commit()
+                queue = f"UPDATE 'primary' SET chapter2 = '{arr[5]}'" \
+                        f" WHERE object = 'the main character'"
+                cur.execute(queue)
+                con.commit()
+                queue = f"UPDATE 'primary' SET chapter3 = '{arr[6]}'" \
+                        f" WHERE object = 'the main character'"
+                cur.execute(queue)
+                con.commit()
+                queue = f"UPDATE 'primary' SET attack = '{arr[7]}'" \
+                        f" WHERE object = 'the main character'"
+                cur.execute(queue)
+                con.commit()
+                queue = f"UPDATE 'primary' SET death = '{arr[8]}'" \
+                        f" WHERE object = 'the main character'"
+                cur.execute(queue)
+                con.commit()
             manager_lob.process_events(event)
-
         screen.blit(red_skin, red_skins)
         screen.blit(blue_skin, blue_skins)
         screen.blit(green_skin, green_skins)
         screen.blit(hood_skin, hood_skins)
         screen.blit(goose, goose_s)
+        if goose1:
+            screen.blit(goose1, goose_s1)
+        if gg:
+            screen.blit(gg, gg1)
 
-        ################################################
-        # Ставим условие, что если в БД есть купленный скин, то кнопки делаем .enable()
+        green = cur.execute("""SELECT access FROM 'primary'
+             WHERE object = 'green suit'""").fetchall()[0][0]
+        if green == 'True':
+            but_green_skin_purch.enable()
+        else:
+            but_green_skin_purch.disable()
+        blue = cur.execute("""SELECT access FROM 'primary'
+                 WHERE object = 'blue suit'""").fetchall()[0][0]
+        if blue == 'True':
+            but_blue_skin_purch.enable()
+        else:
+            but_blue_skin_purch.disable()
+        red = cur.execute("""SELECT access FROM 'primary'
+                     WHERE object = 'red suit'""").fetchall()[0][0]
+        if red == 'True':
+            but_red_skin_purch.enable()
+        else:
+            but_red_skin_purch.disable()
+        new_years = cur.execute("""SELECT access FROM 'primary'
+                         WHERE object = 'new years suit'""").fetchall()[0][0]
+        if new_years == 'True':
+            but_hood_skin_purch.enable()
+        else:
+            but_hood_skin_purch.disable()
+        goosee = cur.execute("""SELECT access FROM 'primary'
+                             WHERE object = 'companion'""").fetchall()[0][0]
+        if goosee == 'True':
+            but_goose_purch.enable()
+        else:
+            but_goose_purch.disable()
         screen.blit(red_skin_purch, red_skins_purch)
         screen.blit(blue_skin_purch, blue_skins_purch)
         screen.blit(green_skin_purch, green_skins_purch)
         screen.blit(hood_skin_purch, hood_skins_purch)
         screen.blit(goose_purch, goose_s_purch)
         screen.blit(default_skin_purch, default_skin_purch_r)
-        ################################################
 
         screen.blit(label_red, label_rect_red)
         screen.blit(label_blue, label_rect_blue)
@@ -1578,8 +1739,11 @@ def lobby():
         screen.blit(label_goose, label_rect_goose)
 
         pygame.display.flip()
+        screen.fill((0, 0, 0))
+        screen.blit(location, location.get_rect())
         manager_lob.draw_ui(screen)
         manager_lob.update(fps)
+        cursor_group.draw(screen)
         clock.tick(fps)
 
 
@@ -1695,6 +1859,7 @@ is_running = True
 all_sprites = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 player_group_02 = pygame.sprite.Group()
+goose_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 logo = pygame.transform.scale(load_img("logo_2.png"), (8000, 400))
 logo_go = AnimatedSprite(logo, 20, 1, 400, -50, all_sprites)
