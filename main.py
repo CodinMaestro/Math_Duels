@@ -14,8 +14,8 @@ cursor_group = pygame.sprite.Group()
 dictionary_for_color = {'chapter1': (0, 255, 0), 'chapter2': 'pink', 'chapter3': 'black'}
 dictionary_for_hp = {1: 20, 2: 30, 3: 50}
 dictionary_for_summ = {1: (7, 5, 10), 2: (11, 5, 10), 3: (15, 10, 15)}
-dictionary_for_cul = {'chapter1': [7, 5, 34, 5, 7, 7, 7, 8], 'chapter2': [8, 6, 18, 18, 18, 6, 4, 4],
-                      'chapter3': [9, 14]}
+dictionary_for_cul = {'chapter1': [7, 5, 34, 5, 7, 7, 7, 8],
+                      'chapter2': [8, 6, 18, 18, 18, 8, 4, 5], 'chapter3': [9, 14]}
 dictionary_for_atk = {'chapter1': 18, 'chapter2': 9, 'chapter3': 15}
 
 
@@ -801,10 +801,6 @@ def one_player(chapter, enemy, N):
         else:
             w = 2100
         Enemy = pygame.transform.scale(load_img(chapter + '/opponent' + '.png'), (w, 300))
-        if chapter == 'chapter2':
-            w = 2400
-        else:
-            w = 2100
         Enemy_death = pygame.transform.scale(load_img(chapter + '/death' + '.png'), (w, 300))
         enemy_go = AnimatedSprite(Enemy, arr[0], 1, 650, 135, enemy_group)
         xe = 100
