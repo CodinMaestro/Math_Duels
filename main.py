@@ -18,6 +18,8 @@ dictionary_for_cul = {'chapter1': [7, 5, 34, 5, 7, 7, 7, 8],
                       'chapter2': [8, 6, 18, 18, 18, 8, 4, 5], 'chapter3': [9, 14]}
 dictionary_for_atk = {'chapter1': 18, 'chapter2': 9, 'chapter3': 15}
 
+# Класс для проврки примеров
+
 
 class Math_question:
     def __init__(self, line, dict=None):
@@ -29,6 +31,7 @@ class Math_question:
             self.numbers = dict
         self.operations = {'**': 0, '*': 0, '+': 0, '-': 0, '/': 0, '!': 0, '√': 0}
 
+    # Проверка на корректность
     def checking_for_correctness(self):
         if len(self.question) > 100:
             return False
@@ -56,6 +59,7 @@ class Math_question:
                 else:
                     return False
 
+    # Трансформация ввода
     def transformation(self):
         s = self.problem
         pr = ' '
@@ -123,6 +127,7 @@ class Math_question:
         summ += self.operations['!'] * 4
         return summ
 
+    # Проверка на вид атаки
     def attack(self):
         if self.operations['√'] > self.operations['!']:
             if self.operations['√'] > self.operations['**']:
@@ -136,6 +141,7 @@ class Math_question:
                 return '**', self.operations['**']
 
 
+# Ф-ция для обработки корня
 def root(question, dict):
     p = Math_question(question, dict)
     np = p.transformation()
@@ -143,6 +149,7 @@ def root(question, dict):
         return str(math.sqrt(eval(np)))
 
 
+# Ф-ция для обработки факториала
 def factorial(question, dict):
     p = Math_question(question, dict)
     np = p.transformation()
@@ -150,6 +157,7 @@ def factorial(question, dict):
         return str(math.factorial(eval(np)))
 
 
+# Класс для обработки gif
 class AnimatedSprite(pygame.sprite.Sprite):
     def __init__(self, sheet, columns, rows, x, y, group):
         group.empty()
@@ -177,6 +185,7 @@ class AnimatedSprite(pygame.sprite.Sprite):
         self.image = self.frames[self.cur_frame]
 
 
+# Ф-ция для обработки фотографий
 def load_img(name, colorkey=None):
     fullname = 'data/' + name
     if not os.path.isfile(fullname):
@@ -194,6 +203,7 @@ def load_img(name, colorkey=None):
     return image
 
 
+# Создание меню и стартового окна ###########################################################
 pygame.init()
 pygame.display.set_caption('Math Duels')
 manager = pygame_gui.UIManager((1200, 750))
@@ -256,13 +266,13 @@ tiles_images = {
             'crystal': load_img('chapter1/crystal.png'),
             'place_for_a_duel': load_img('chapter1/MD.png')}
 tile_width = tile_height = 100
-
+#############################################################################################
 
 def terminate():
     pygame.quit()
     sys.exit()
 
-
+# Ф-ция для загрузки уровня
 def load_level(filename):
     filename = 'data/' + filename
     with open(filename, 'r') as file:
@@ -271,6 +281,7 @@ def load_level(filename):
     return list(map(lambda x: x.ljust(max_width, '.'), map_level))
 
 
+# Класс для визуализации карты
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tile_group_map, all_sprites_map)
@@ -283,6 +294,7 @@ class Tile(pygame.sprite.Sprite):
         self.rect = self.rect.move(tile_width * pos_x, tile_height * pos_y)
 
 
+# Ф-ция для создания уровня
 def generate_level(level):
     new_player, x, y = None, None, None
     for y in range(len(level)):
@@ -321,6 +333,7 @@ def generate_level(level):
     return new_player, x, y
 
 
+# Класс для обработки действий игрока на карте
 class Player(pygame.sprite.Sprite):
     def __init__(self, sheet, columns, rows, x, y):
         super().__init__(player_group_map, all_sprites_map)
@@ -343,6 +356,7 @@ class Player(pygame.sprite.Sprite):
         self.image = self.frames[self.cur_frame]
 
 
+# Класс для камеры
 class Camera:
     def __init__(self):
         self.dx = 0
@@ -373,6 +387,7 @@ duels_map = pygame.sprite.Group()
 player = None
 
 
+# Класс для обработки карты
 class Map:
     def __init__(self, level):
         all_sprites_map.empty()
@@ -433,6 +448,7 @@ class Map:
                 return
 
 
+# Ф-ция для отрисовки текста
 def draw(i, y, arr, height=750, width=1200, color='white', x=22, n=20):
     text_coord = height
     font = pygame.font.Font("data/F77.ttf", x)
@@ -456,6 +472,7 @@ def story(name):
     return arr
 
 
+# Класс для обучения
 class Training:
     def __init__(self):
         super().__init__()
@@ -605,6 +622,7 @@ class Training:
             screen.blit(rendered, linerect)
 
 
+# Ф-ция для отрисовки вступительного фрагмента первой главы
 def story_in_city():
     player_group_city = pygame.sprite.Group()
     pygame.display.set_caption('Story')
@@ -673,6 +691,7 @@ def story_in_city():
         pygame.display.flip()
 
 
+# Класс для создания и обработки сюжета
 class Story:
     def __init__(self, name):
         super().__init__()
@@ -789,6 +808,7 @@ class Story:
             clock.tick(fps)
 
 
+# Ф-ция для игрока в сюжете
 def one_player(chapter, enemy, N):
     fps = 60
     n3 = 0
@@ -1141,6 +1161,7 @@ def one_player(chapter, enemy, N):
 WHOSETURN = 0
 
 
+# Ф-ция для игры на 2-х
 def two_players():
     global WHOSETURN
     fps = 60
@@ -1511,6 +1532,7 @@ def two_players():
         clock.tick(30)
 
 
+# Ф-ция для отрисовки магазина
 def lobby():
     fps = 60
     screen.fill("black")
@@ -1789,6 +1811,7 @@ def lobby():
         clock.tick(fps)
 
 
+# Класс для отрисовки курсора
 class Cursors(pygame.sprite.Sprite):
     def __init__(self, image, group):
         group.empty()
@@ -1808,6 +1831,7 @@ class Cursors(pygame.sprite.Sprite):
             self.rect.y = height + 100
 
 
+# Ф-ция для создания настроек
 def settings():
     fps = 60
     screen.fill("black")
@@ -1897,6 +1921,7 @@ def settings():
         clock.tick(fps)
 
 
+# Основной цикл программы
 is_running = True
 all_sprites = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
