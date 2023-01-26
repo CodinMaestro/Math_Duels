@@ -11,11 +11,11 @@ con = sqlite3.connect("data/data_for_math_duels.db")
 cur = con.cursor()
 
 cursor_group = pygame.sprite.Group()
-dictionary_for_color = {'chapter1': (0, 255, 0), 'chapter2': 'pink', 'chapter3': '??'}
+dictionary_for_color = {'chapter1': (0, 255, 0), 'chapter2': 'pink', 'chapter3': 'black'}
 dictionary_for_hp = {1: 20, 2: 30, 3: 50}
 dictionary_for_summ = {1: (7, 5, 10), 2: (11, 5, 10), 3: (15, 10, 15)}
 dictionary_for_cul = {'chapter1': [7, 5, 34, 5, 7, 7, 7, 8], 'chapter2': [8, 6, 18, 18, 18, 6, 4, 4],
-                      'chapter3': [1, 1]}
+                      'chapter3': [9, 14]}
 dictionary_for_atk = {'chapter1': 18, 'chapter2': 9, 'chapter3': 15}
 
 
@@ -815,7 +815,7 @@ def one_player(chapter, enemy, N):
             if chapter == 'chapter1':
                 w = 2275
             else:
-                w = 2100
+                w = 2925
         Enemy = pygame.transform.scale(load_img(chapter + '/boss' + '.png'), (w, 325))
         if chapter == 'chapter2':
             w = 1625
@@ -823,7 +823,7 @@ def one_player(chapter, enemy, N):
             if chapter == 'chapter1':
                 w = 2600
             else:
-                w = 325
+                w = 4550
         Enemy_death = pygame.transform.scale(load_img(chapter + '/victory' + '.png'), (w, 325))
         enemy_go = AnimatedSprite(Enemy, arr[-2], 1, 650, 80, enemy_group)
         xe = 30
@@ -874,26 +874,27 @@ def one_player(chapter, enemy, N):
                                         WHERE object = 'the main character'""").fetchall()[0][0]),
                                          (e, 150))
     player_go = AnimatedSprite(player_gif, 6, 1, 235, 280, player_group)
-    if chapter == 'chapter2':
-        w = 1688
-    else:
-        w = 1500
-    Enemy_d = pygame.transform.scale(load_img(chapter + '/damage' + '.png'), (w, 300))
-    if chapter == 'chapter2':
-        w = 5400
-    else:
-        w = 10200
-    roots = pygame.transform.scale(load_img(chapter + '/roots' + '.png'), (w, 300))
-    if chapter == 'chapter2':
-        w = 5400
-    else:
-        w = 1500
-    noise = pygame.transform.scale(load_img(chapter + '/noise' + '.png'), (w, 300))
-    if chapter == 'chapter2':
-        w = 5400
-    else:
-        w = 2100
-    degree = pygame.transform.scale(load_img(chapter + '/degree' + '.png'), (w, 300))
+    if enemy == 'common':
+        if chapter == 'chapter2':
+            w = 1688
+        else:
+            w = 1500
+        Enemy_d = pygame.transform.scale(load_img(chapter + '/damage' + '.png'), (w, 300))
+        if chapter == 'chapter2':
+            w = 5400
+        else:
+            w = 10200
+        roots = pygame.transform.scale(load_img(chapter + '/roots' + '.png'), (w, 300))
+        if chapter == 'chapter2':
+            w = 5400
+        else:
+            w = 1500
+        noise = pygame.transform.scale(load_img(chapter + '/noise' + '.png'), (w, 300))
+        if chapter == 'chapter2':
+            w = 5400
+        else:
+            w = 2100
+        degree = pygame.transform.scale(load_img(chapter + '/degree' + '.png'), (w, 300))
     text_input2 = UITextEntryLine(relative_rect=Rect(1100, 650, 100, 50), manager=manager_tp)
     maxm_hp_gg = '/' + str(dictionary_for_hp[N])
     maxm_hp_en = '/' + str(dictionary_for_hp[N])
