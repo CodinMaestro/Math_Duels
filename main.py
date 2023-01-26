@@ -15,7 +15,7 @@ dictionary_for_color = {'chapter1': (0, 255, 0), 'chapter2': 'pink', 'chapter3':
 dictionary_for_hp = {1: 20, 2: 30, 3: 50}
 dictionary_for_summ = {1: (7, 5, 10), 2: (11, 5, 10), 3: (15, 10, 15)}
 dictionary_for_cul = {'chapter1': [7, 5, 34, 5, 7, 7, 7, 8], 'chapter2': [8, 6, 18, 18, 18, 6, 4, 4],
-                      'chapter3': '??'}
+                      'chapter3': [1, 1]}
 dictionary_for_atk = {'chapter1': 18, 'chapter2': 9, 'chapter3': 15}
 
 
@@ -721,6 +721,8 @@ class Story:
         third_ch = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((800, 0), (400, 750)),
                                                 text='<mega_image_3>',
                                                 manager=manager_ch)
+        Z = cur.execute("""SELECT quantity_of_coins FROM 'primary'
+                                     WHERE object = 'sound volume'""").fetchall()[0][0]
 
         while True:
             screen.fill((0, 0, 0))
@@ -736,9 +738,10 @@ class Story:
                 if event.type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == first_ch:
                         file = "data/Xchase.mp3"
-                        #pygame.mixer.init()
-                        #pygame.mixer.music.load(file)
-                        #pygame.mixer.music.play()
+                        pygame.mixer.init()
+                        pygame.mixer.music.load(file)
+                        pygame.mixer.music.play()
+                        pygame.mixer.music.set_volume(Z)
                         story_in_city()
                         Map('level1.txt')
                         if one_player('chapter1', 'common', 1):
@@ -748,11 +751,11 @@ class Story:
                                 if one_player('chapter1', 'boss', 3):
                                     Story('chapter1.txt')
                     if event.ui_element == second_ch:
-                        # Уровни для 2-й главы
-                        # file = 'data/hunt.mp3'
-                        # pygame.mixer.init()
-                        # pygame.mixer.music.load(file)
-                        # pygame.mixer.music.play()
+                        file = 'data/hunt.mp3'
+                        pygame.mixer.init()
+                        pygame.mixer.music.load(file)
+                        pygame.mixer.music.play()
+                        pygame.mixer.music.set_volume(Z)
                         Map('level4.txt')
                         if one_player('chapter2', 'common', 1):
                             Map('level5.txt')
@@ -762,11 +765,11 @@ class Story:
                                     Story('chapter2.txt')
 
                     if event.ui_element == third_ch:
-                        # Уровни для 3-й главы
-                        #file = 'data/storm.mp3'
-                        #pygame.mixer.init()
-                        #pygame.mixer.music.load(file)
-                        #pygame.mixer.music.play()
+                        file = 'data/storm.mp3'
+                        pygame.mixer.init()
+                        pygame.mixer.music.load(file)
+                        pygame.mixer.music.play()
+                        pygame.mixer.music.set_volume(Z)
                         if one_player('chapter3', 'boss', 3):
                             Story('chapter3.txt')
 
@@ -820,7 +823,7 @@ def one_player(chapter, enemy, N):
             if chapter == 'chapter1':
                 w = 2600
             else:
-                w = 2100
+                w = 325
         Enemy_death = pygame.transform.scale(load_img(chapter + '/victory' + '.png'), (w, 325))
         enemy_go = AnimatedSprite(Enemy, arr[-2], 1, 650, 80, enemy_group)
         xe = 30
