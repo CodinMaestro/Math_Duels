@@ -942,11 +942,22 @@ def one_player(chapter, enemy, N):
                                   "Orange")
         x = 1150 - (len(str(cur.execute("""SELECT quantity_of_coins 
         FROM 'primary' WHERE object = 'the main character'""").fetchall()[0][0])) * 17)
+        summ = text_input.get_text()
+        try:
+            summ = Math_question(summ)
+            summ.transformation()
+            summ = summ.print_summ()
+        except Exception:
+            summ = text_input.get_text()
+            summ = (summ.count('+') + summ.count('-') * 2 + summ.count('*') * 3 +
+                    summ.count('/') * 4 + summ.count('√') * 6 + summ.count('!') * 4)
+        pr_summ = font_for_money.render(str(summ), True, (51, 41, 255))
         manager_tp.draw_ui(screen)
         screen.fill((0, 0, 0))
         screen.blit(location, location.get_rect())
         screen.blit(money, (1150, 20))
         screen.blit(M, (x, 28))
+        screen.blit(pr_summ, (0, 470))
         screen.blit(text_summ, (775, xe))
         screen.blit(maxm_hp_gg, (293, 270))
         screen.blit(maxm_hp_en, (785, xe + 40))
